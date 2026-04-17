@@ -5,18 +5,24 @@ import type { Heatmap, Preview } from "@verify/shared";
 import { Skeleton } from "../ui/Skeleton";
 import { Tabs } from "../ui/Tab";
 
-// Image + heatmap control, matching 03-result-detail-ai.html
-// .heatmap-control:
+// Image + heatmap control.
 //
-//   [ Original ][ Heatmap ]    ← segmented tab-switcher in paper-alt track
-//   Overlay  ——●——  65%         ← slider row inline
+//   [ Original ][ Heatmap ]    ← segmented tab-switcher
+//   Overlay  ——●——  65%         ← only when heatmap.status === "ready"
+//                                 + mode === "transparent". Hidden for
+//                                 pending/skipped/failed — no overlay
+//                                 means no opacity to control.
 //   small caption text          ← describes what the overlay shows
 //
-// On the Heatmap tab with status=ready + mode=transparent we stack a
-// transparent heatmap PNG over the preview with a user-controlled
-// opacity; the alpha channel already encodes heat vs. non-heat, so
-// CSS opacity multiplies cleanly without needing canvas.
-// Status skipped/failed shows a muted placeholder tile — never spinner.
+// Heatmap tab states:
+//   ready + transparent → composite preview + heatmap with slider
+//   ready + overlayed   → heatmap alone, no slider
+//   pending             → skeleton (wait for polling to resolve)
+//   skipped / failed    → preview image rendered with a grayscale
+//                         filter + a paper/90 pill overlay explaining
+//                         that no heatmap was produced. We keep the
+//                         user's image visible so the tab isn't a
+//                         dead-end beige square.
 
 type TabId = "original" | "heatmap";
 
@@ -32,24 +38,32 @@ export function HeatmapTab({ preview, heatmap }: Props) {
   const [active, setActive] = useState<TabId>("original");
   const [opacity, setOpacity] = useState<number>(DEFAULT_OPACITY);
 
+  const showSlider =
+    active === "heatmap" &&
+    heatmap.status === "ready" &&
+    heatmap.mode === "transparent";
+
   return (
     <div className="flex flex-col gap-[14px]">
-      <ImageFrame preview={preview} heatmap={heatmap} showHeatmap={active === "heatmap"} opacity={opacity} />
+      <ImageFrame
+        preview={preview}
+        heatmap={heatmap}
+        showHeatmap={active === "heatmap"}
+        opacity={opacity}
+      />
 
       <div className="rounded-[11px] border border-border bg-white px-[14px] py-[13px]">
-        <div className="mb-[13px]">
-          <Tabs
-            tabs={[
-              { id: "original", label: "Original" },
-              { id: "heatmap", label: "Heatmap" },
-            ] as const}
-            active={active}
-            onChange={(id: TabId) => setActive(id)}
-            ariaLabel="Image view"
-          />
-        </div>
-        {active === "heatmap" && heatmap.status === "ready" && heatmap.mode === "transparent" ? (
-          <>
+        <Tabs
+          tabs={[
+            { id: "original", label: "Original" },
+            { id: "heatmap", label: "Heatmap" },
+          ] as const}
+          active={active}
+          onChange={(id: TabId) => setActive(id)}
+          ariaLabel="Image view"
+        />
+        {showSlider && (
+          <div className="mt-[13px]">
             <div className="flex items-center gap-[11px]">
               <label
                 htmlFor="heatmap-opacity"
@@ -75,11 +89,7 @@ export function HeatmapTab({ preview, heatmap }: Props) {
             <p className="mt-[9px] text-[10px] text-ink/55">
               Red areas show where the detector found AI patterns.
             </p>
-          </>
-        ) : (
-          <p className="text-[11px] text-ink/55">
-            Switch to the Heatmap tab to see where detectors looked.
-          </p>
+          </div>
         )}
       </div>
     </div>
@@ -98,7 +108,9 @@ function ImageFrame({
   opacity: number;
 }) {
   if (showHeatmap) {
-    return <HeatmapView preview={preview} heatmap={heatmap} opacity={opacity} />;
+    return (
+      <HeatmapView preview={preview} heatmap={heatmap} opacity={opacity} />
+    );
   }
   return <PreviewImage preview={preview} />;
 }
@@ -108,7 +120,12 @@ function PreviewImage({ preview }: { preview: Preview }) {
     return <Skeleton className="aspect-[4/3] w-full rounded-card" />;
   }
   if (preview.status === "failed") {
-    return <Placeholder text="Preview unavailable" />;
+    return (
+      <PlaceholderTile
+        text="Preview unavailable"
+        subtext="The scan is still available — we just couldn't load the thumbnail."
+      />
+    );
   }
   return (
     <img
@@ -133,17 +150,19 @@ function HeatmapView({
   }
   if (heatmap.status === "skipped") {
     return (
-      <Placeholder
-        text="Heatmap not available for this image"
-        subtext="TruthScan doesn't generate one when the verdict is clear. The verdict is still accurate."
+      <UnavailableOverPreview
+        preview={preview}
+        headline="Heatmap not available for this image"
+        body="TruthScan doesn't generate one when the verdict is clear. The verdict is still accurate."
       />
     );
   }
   if (heatmap.status === "failed") {
     return (
-      <Placeholder
-        text="Heatmap unavailable"
-        subtext="The verdict is still accurate. The visual breakdown couldn't be generated for this image."
+      <UnavailableOverPreview
+        preview={preview}
+        headline="Heatmap unavailable"
+        body="The verdict is still accurate. The visual breakdown couldn't be generated for this image."
       />
     );
   }
@@ -178,7 +197,49 @@ function HeatmapView({
   );
 }
 
-function Placeholder({ text, subtext }: { text: string; subtext?: string }) {
+/**
+ * Grayscale-desaturated preview with a readable message pill centered
+ * on top. Used for heatmap.status === "skipped" | "failed" whenever we
+ * have a preview image to show. If we don't, fall back to the plain
+ * placeholder tile so we don't render a broken <img>.
+ */
+function UnavailableOverPreview({
+  preview,
+  headline,
+  body,
+}: {
+  preview: Preview;
+  headline: string;
+  body: string;
+}) {
+  if (preview.status !== "ready") {
+    return <PlaceholderTile text={headline} subtext={body} />;
+  }
+  return (
+    <div className="relative">
+      <img
+        src={preview.url}
+        alt=""
+        className="block w-full rounded-card bg-paper-alt"
+        style={{ filter: "grayscale(100%) brightness(0.95)" }}
+      />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
+        <div className="max-w-xs rounded-card bg-paper/90 px-4 py-3 text-center shadow-sm backdrop-blur-sm">
+          <div className="text-[13px] font-medium text-ink">{headline}</div>
+          <p className="mt-0.5 text-[11px] text-ink/55">{body}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlaceholderTile({
+  text,
+  subtext,
+}: {
+  text: string;
+  subtext?: string;
+}) {
   return (
     <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-card bg-paper-alt px-6 text-center text-ink/55">
       <ImageOff className="h-6 w-6" aria-hidden />
