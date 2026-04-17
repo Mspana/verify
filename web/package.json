@@ -1,0 +1,9 @@
+{
+    "name": "web",
+    "private": true,
+    "version": "0.0.0",
+    "scripts": {
+      "dev": "echo 'web not set up yet'",
+      "build": "echo 'web not set up yet'"
+    }
+  }

@@ -1,0 +1,28 @@
+name = "verify-api"
+main = "src/index.ts"
+compatibility_date = "2026-04-16"
+compatibility_flags = ["nodejs_compat"]
+
+# Default (production) config
+[[kv_namespaces]]
+binding = "VERIFY_KV"
+id = "ec8e2822db754dce993b45ce8309937c"
+
+# Staging environment
+[env.staging]
+name = "verify-api-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "VERIFY_KV"
+id = "15173986aaec46deb8577fb97675cd26"
+
+# Production environment
+[env.production]
+name = "verify-api"
+routes = [
+  { pattern = "yourdomain.com/api/*", zone_name = "yourdomain.com" }
+]
+
+[[env.production.kv_namespaces]]
+binding = "VERIFY_KV"
+id = "ec8e2822db754dce993b45ce8309937c"

@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+      "target": "ES2022",
+      "module": "ESNext",
+      "moduleResolution": "Bundler",
+      "lib": ["ES2022"],
+  
+      "strict": true,
+      "noImplicitAny": true,
+      "noUncheckedIndexedAccess": true,
+      "noFallthroughCasesInSwitch": true,
+  
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "isolatedModules": true,
+      "resolveJsonModule": true,
+  
+      "declaration": true,
+      "sourceMap": true,
+  
+      "baseUrl": ".",
+      "paths": {
+        "@verify/shared": ["./shared/src/index.ts"],
+        "@verify/shared/*": ["./shared/src/*"]
+      }
+    },
+    "exclude": ["node_modules", "dist", ".wrangler"]
+  }
