@@ -1,10 +1,8 @@
-import { Loader2, ScanLine } from "lucide-react";
+import { Loader2, Scan as ScanIcon } from "lucide-react";
 
-import { Button } from "../ui/Button";
-
-// The primary bilingual CTA. Width is full on mobile and content-width
-// on desktop so the upload area and button form a stacked pair on narrow
-// screens and a side-by-side pair on wide ones.
+// Primary bilingual CTA. Mobile: full-width with the corner-bracket
+// Scan icon left of the label. Desktop: no icon, stretches to fill
+// the upload-row grid cell (per 01-home.html upload-row layout).
 
 type Props = {
   onClick: () => void;
@@ -14,22 +12,27 @@ type Props = {
 
 export function ScanButton({ onClick, disabled, loading }: Props) {
   return (
-    <Button
-      size="lg"
+    <button
+      type="button"
       onClick={onClick}
       disabled={disabled || loading}
-      className="w-full md:w-auto"
+      className={[
+        "flex h-full w-full items-center justify-center gap-2",
+        "rounded-card bg-cobalt text-paper text-[14px] font-medium tracking-[0.2px]",
+        "py-3.5 px-4 transition-colors hover:bg-cobalt/90",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+      ].join(" ")}
     >
       {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        <Loader2 className="h-4 w-4 animate-spin md:hidden" aria-hidden />
       ) : (
-        <ScanLine className="h-4 w-4" aria-hidden />
+        <ScanIcon
+          className="h-3.5 w-3.5 md:hidden"
+          strokeWidth={1.5}
+          aria-hidden
+        />
       )}
-      <span>
-        <span className="font-medium">扫描</span>
-        <span className="mx-1.5 opacity-70">·</span>
-        <span>Scan</span>
-      </span>
-    </Button>
+      <span>扫描 · Scan</span>
+    </button>
   );
 }

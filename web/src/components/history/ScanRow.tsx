@@ -27,7 +27,7 @@ export function ScanRow({ scan }: Props) {
   return (
     <Link
       to={`/scan/${encodeURIComponent(scan.id)}`}
-      className="flex items-center gap-3 rounded-card border border-border bg-paper p-2.5 transition-colors hover:bg-paper-alt md:gap-4 md:p-4"
+      className="flex items-center gap-3 rounded-card border border-border bg-white p-2.5 transition-colors hover:bg-paper-alt md:gap-4 md:p-4"
     >
       <Thumbnail scan={scan} />
 

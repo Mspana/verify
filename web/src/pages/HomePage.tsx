@@ -11,11 +11,11 @@ import { ScanRow } from "../components/history/ScanRow";
 import { ScanButton } from "../components/scan/ScanButton";
 import { UploadArea } from "../components/scan/UploadArea";
 
-// Home screen: upload target, bilingual Scan CTA, and the start of the
-// history list. Soft-delete/trash controls, delete-with-undo toast, and
-// the dedicated quota-exceeded and error full-page screens arrive in
-// later steps; for now any ApiError from the upload flow surfaces as
-// an inline banner here.
+// Home screen matching 01-home.html. Mobile column: eyebrow → title
+// → upload-area → full-width CTA → recent scans. Desktop: same column
+// but the upload area and CTA sit in a 1fr/180px grid row so the
+// cobalt CTA stretches to the full upload area height. Soft-delete /
+// trash controls and the dedicated quota/error screens arrive later.
 
 type UploadState =
   | { kind: "idle" }
@@ -32,12 +32,8 @@ export function HomePage() {
   useEffect(() => {
     let cancelled = false;
     getScans({ limit: 20 })
-      .then((res) => {
-        if (!cancelled) setScans(res.scans);
-      })
-      .catch(() => {
-        if (!cancelled) setScansError("Couldn't load your scan history.");
-      });
+      .then((res) => !cancelled && setScans(res.scans))
+      .catch(() => !cancelled && setScansError("Couldn't load your scan history."));
     return () => {
       cancelled = true;
     };
@@ -59,53 +55,61 @@ export function HomePage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-12">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">扫描 · Scan</h1>
-        <p className="mt-1 text-sm text-ink/55">
-          Upload an image to check whether it's AI generated.
+    <div className="mx-auto max-w-[840px] px-5 pt-2 pb-3.5 md:px-10 md:py-8">
+      <header className="mb-[14px] md:mb-[18px]">
+        <p className="mb-1.5 text-[11px] uppercase tracking-[0.3px] text-ink/55">
+          AI detection
         </p>
+        <h1 className="text-[20px] font-medium leading-[1.2] md:text-[24px]">
+          Check for AI
+        </h1>
       </header>
 
       {upload.kind === "error" && (
-        <div className="mb-4">
+        <div className="mb-3">
           <Banner kind="error" headline={upload.headline}>
             {upload.message}
           </Banner>
         </div>
       )}
 
-      <UploadArea
-        onFile={(f) => {
-          setFile(f);
-          setUpload({ kind: "idle" });
-        }}
-        selectedFile={file}
-        disabled={upload.kind === "running"}
-      />
-
-      <div className="mt-4 flex justify-end">
-        <ScanButton
-          onClick={startScan}
-          disabled={!file}
-          loading={upload.kind === "running"}
+      {/* Mobile: stacked. Desktop: upload + CTA side-by-side (1fr 180px). */}
+      <div className="md:grid md:grid-cols-[1fr_180px] md:gap-[14px] md:mb-8">
+        <UploadArea
+          onFile={(f) => {
+            setFile(f);
+            setUpload({ kind: "idle" });
+          }}
+          selectedFile={file}
+          disabled={upload.kind === "running"}
         />
+        <div className="mt-3 md:mt-0">
+          <ScanButton
+            onClick={startScan}
+            disabled={!file}
+            loading={upload.kind === "running"}
+          />
+        </div>
       </div>
 
-      <section className="mt-10" aria-labelledby="history-heading">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 id="history-heading" className="text-base font-semibold">
+      <section aria-labelledby="history-heading" className="mt-8 md:mt-0">
+        <div className="mb-2.5 flex items-baseline justify-between md:mb-3">
+          <h2
+            id="history-heading"
+            className="text-[13px] font-medium md:text-[14px]"
+          >
             Recent scans
           </h2>
           {scans && scans.length > 0 && (
-            <a href="/history" className="text-xs text-cobalt hover:underline">
+            <a
+              href="/history"
+              className="text-[12px] text-cobalt hover:underline"
+            >
               See all
             </a>
           )}
         </div>
-        {scansError && (
-          <Banner kind="info">{scansError}</Banner>
-        )}
+        {scansError && <Banner kind="info">{scansError}</Banner>}
         {!scansError && scans === null && (
           <div className="text-sm text-ink/55">Loading…</div>
         )}
@@ -116,7 +120,7 @@ export function HomePage() {
           />
         )}
         {!scansError && scans && scans.length > 0 && (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2 md:gap-2.5">
             {scans.slice(0, 5).map((s) => (
               <li key={s.id}>
                 <ScanRow scan={s} />

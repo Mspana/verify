@@ -1,11 +1,10 @@
-import { ImagePlus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 
-// Drag-and-drop + tap-to-select upload target. Keyboard accessible:
-// focusable, Enter/Space trigger the hidden file input. The component
-// owns only presentation state (drag-highlight, input ref) — file
-// selection is reported upward via onFile, and the parent page owns
-// everything else (validation errors, upload progress, submit).
+// Drag-and-drop + tap-to-select upload target matching 01-home.html
+// upload-area / upload-area-d. Bg is true white (distinct from the
+// paper page bg) with a 1px dashed border tokenized as `border`.
+// Keyboard accessible: focusable, Enter/Space trigger the hidden input.
 
 type Props = {
   onFile: (file: File) => void;
@@ -41,12 +40,12 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
   };
 
   const base =
-    "relative flex flex-col items-center justify-center gap-3 rounded-frame border-2 border-dashed px-6 py-16 text-center transition-colors";
+    "flex h-full flex-col items-center justify-center rounded-card border border-dashed px-4 py-[30px] text-center transition-colors md:px-6 md:py-[38px]";
   const state = disabled
-    ? "border-border bg-paper text-ink/55 cursor-not-allowed"
+    ? "border-border bg-white text-ink/55 cursor-not-allowed"
     : dragging
       ? "border-cobalt bg-cobalt/5 text-ink cursor-pointer"
-      : "border-border bg-paper hover:bg-paper-alt text-ink cursor-pointer";
+      : "border-border bg-white hover:bg-paper-alt text-ink cursor-pointer";
 
   return (
     <div
@@ -68,20 +67,30 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
       onDrop={onDrop}
       className={`${base} ${state}`}
     >
-      <ImagePlus className="h-8 w-8" aria-hidden />
+      <div
+        aria-hidden
+        className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-paper-alt"
+      >
+        <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+      </div>
       {selectedFile ? (
         <>
-          <div className="text-sm font-medium">{selectedFile.name}</div>
-          <div className="text-xs text-ink/55">
+          <div className="mt-2.5 max-w-full truncate text-[13px] font-medium">
+            {selectedFile.name}
+          </div>
+          <div className="mt-0.5 text-[11px] text-ink/55">
             Tap to choose a different image
           </div>
         </>
       ) : (
         <>
-          <div className="text-base font-medium">
-            Tap to upload, or drop an image
+          <div className="mt-2.5 text-[13px] font-medium">
+            <span className="md:hidden">Tap to upload</span>
+            <span className="hidden md:inline">
+              Drag an image or click to upload
+            </span>
           </div>
-          <div className="text-xs text-ink/55">
+          <div className="mt-0.5 text-[11px] text-ink/55">
             JPG, PNG, HEIC — up to 10 MB
           </div>
         </>
@@ -94,8 +103,6 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) onFile(file);
-          // Clear the value so picking the same file twice in a row
-          // still fires the change event.
           e.target.value = "";
         }}
       />
