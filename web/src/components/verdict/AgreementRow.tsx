@@ -1,34 +1,22 @@
 import type { AgreementStrength } from "@verify/shared";
 
-// Small row beneath the verdict showing how strongly TruthScan's
-// individual signals agree with the verdict. `disagreement` gets its
-// own red accent treatment — see the disagreement banner in ResultPage
-// for the more prominent notice; this row just labels the state.
+// Agreement strength row, per 03-result-detail-ai.html .agreement-row
+// and the .warn variant in 05-pending-and-disagreement.html.
+// White card; 4 bar pips on the right; label + value stacked on the left.
+// Disagreement uses an uncertain-accent border + uncertain-ink value.
 
-const COPY: Record<AgreementStrength, { label: string; body: string }> = {
-  strong: {
-    label: "Strong agreement",
-    body: "All detection signals point to the same conclusion.",
-  },
-  moderate: {
-    label: "Moderate agreement",
-    body: "Most signals support this verdict.",
-  },
-  weak: {
-    label: "Weak agreement",
-    body: "Signals lean toward this verdict but aren't conclusive.",
-  },
-  disagreement: {
-    label: "Signals disagree",
-    body: "Detection signals conflict. Interpret the verdict with caution.",
-  },
+const COPY: Record<AgreementStrength, string> = {
+  strong: "Strong",
+  moderate: "Moderate",
+  weak: "Weak",
+  disagreement: "Disagreement",
 };
 
-const BAR: Record<AgreementStrength, { filled: number; accent: string }> = {
-  strong: { filled: 4, accent: "bg-ai-accent" },
-  moderate: { filled: 3, accent: "bg-ai-accent" },
-  weak: { filled: 2, accent: "bg-uncertain-accent" },
-  disagreement: { filled: 4, accent: "bg-human-accent" },
+const BARS_FILLED: Record<AgreementStrength, number> = {
+  strong: 3,
+  moderate: 2,
+  weak: 1,
+  disagreement: 1,
 };
 
 type Props = {
@@ -36,27 +24,38 @@ type Props = {
 };
 
 export function AgreementRow({ agreement }: Props) {
-  const copy = COPY[agreement];
-  const bar = BAR[agreement];
+  const isDisagreement = agreement === "disagreement";
+  const filled = BARS_FILLED[agreement];
+  const fillColor = isDisagreement ? "bg-uncertain-accent" : "bg-ai-accent";
   return (
-    <div className="flex items-start gap-3 rounded-card border border-border bg-paper p-4">
-      <div
-        aria-hidden
-        className="mt-1 flex flex-col gap-0.5"
-        title={copy.label}
-      >
+    <div
+      className={[
+        "flex items-center justify-between rounded-[10px] border bg-white px-[14px] py-[11px]",
+        isDisagreement ? "border-uncertain-accent" : "border-border",
+      ].join(" ")}
+    >
+      <div className="min-w-0">
+        <p className="mb-0.5 text-[11px] tracking-[0.2px] text-ink/55 uppercase">
+          Detector agreement
+        </p>
+        <p
+          className={[
+            "text-[13px] font-medium",
+            isDisagreement ? "text-uncertain-ink" : "text-ink",
+          ].join(" ")}
+        >
+          {COPY[agreement]}
+        </p>
+      </div>
+      <div aria-hidden className="flex gap-[3px]">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div
+          <span
             key={i}
-            className={`h-1 w-6 rounded-full ${
-              i < bar.filled ? bar.accent : "bg-border"
+            className={`h-[14px] w-[6px] rounded-[2px] ${
+              i < filled ? fillColor : "bg-border"
             }`}
           />
         ))}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium">{copy.label}</div>
-        <p className="mt-0.5 text-xs text-ink/55">{copy.body}</p>
       </div>
     </div>
   );

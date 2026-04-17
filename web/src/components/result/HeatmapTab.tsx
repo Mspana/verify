@@ -5,16 +5,18 @@ import type { Heatmap, Preview } from "@verify/shared";
 import { Skeleton } from "../ui/Skeleton";
 import { Tabs } from "../ui/Tab";
 
-// Image tabs: Original view + Heatmap view. On the Heatmap tab with
-// status=ready mode=transparent, stack the transparent heatmap PNG
-// over the preview with a user-controlled opacity — this is the
-// client-side compositing the architecture calls for. Canvas would be
-// over-engineering: the alpha channel already encodes heat vs.
-// non-heat, so CSS opacity on the top <img> multiplies cleanly.
+// Image + heatmap control, matching 03-result-detail-ai.html
+// .heatmap-control:
 //
-// status=skipped and status=failed both render a muted placeholder
-// (per ERRORS.md heatmap skipped/unavailable). They're never a spinner.
-// Default tab stays Original.
+//   [ Original ][ Heatmap ]    ← segmented tab-switcher in paper-alt track
+//   Overlay  ——●——  65%         ← slider row inline
+//   small caption text          ← describes what the overlay shows
+//
+// On the Heatmap tab with status=ready + mode=transparent we stack a
+// transparent heatmap PNG over the preview with a user-controlled
+// opacity; the alpha channel already encodes heat vs. non-heat, so
+// CSS opacity multiplies cleanly without needing canvas.
+// Status skipped/failed shows a muted placeholder tile — never spinner.
 
 type TabId = "original" | "heatmap";
 
@@ -24,42 +26,86 @@ type Props = {
   heatmap: Heatmap;
 };
 
-const DEFAULT_OPACITY = 0.6;
+const DEFAULT_OPACITY = 0.65;
 
 export function HeatmapTab({ preview, heatmap }: Props) {
   const [active, setActive] = useState<TabId>("original");
   const [opacity, setOpacity] = useState<number>(DEFAULT_OPACITY);
 
   return (
-    <section className="rounded-card border border-border bg-paper overflow-hidden">
-      <Tabs
-        tabs={[
-          { id: "original", label: "Original" },
-          { id: "heatmap", label: "Heatmap" },
-        ] as const}
-        active={active}
-        onChange={(id: TabId) => setActive(id)}
-        ariaLabel="Image view"
-      />
-      <div className="p-4">
-        {active === "original" ? (
-          <PreviewImage preview={preview} />
-        ) : (
-          <HeatmapView
-            preview={preview}
-            heatmap={heatmap}
-            opacity={opacity}
-            onOpacityChange={setOpacity}
+    <div className="flex flex-col gap-[14px]">
+      <ImageFrame preview={preview} heatmap={heatmap} showHeatmap={active === "heatmap"} opacity={opacity} />
+
+      <div className="rounded-[11px] border border-border bg-white px-[14px] py-[13px]">
+        <div className="mb-[13px]">
+          <Tabs
+            tabs={[
+              { id: "original", label: "Original" },
+              { id: "heatmap", label: "Heatmap" },
+            ] as const}
+            active={active}
+            onChange={(id: TabId) => setActive(id)}
+            ariaLabel="Image view"
           />
+        </div>
+        {active === "heatmap" && heatmap.status === "ready" && heatmap.mode === "transparent" ? (
+          <>
+            <div className="flex items-center gap-[11px]">
+              <label
+                htmlFor="heatmap-opacity"
+                className="min-w-[56px] text-[11px] text-ink/55"
+              >
+                Overlay
+              </label>
+              <input
+                id="heatmap-opacity"
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(opacity * 100)}
+                onChange={(e) => setOpacity(Number(e.target.value) / 100)}
+                aria-label="Heatmap opacity"
+                className="flex-1 accent-cobalt"
+              />
+              <span className="min-w-[30px] text-right text-[11px] text-ink/75 tabular-nums">
+                {Math.round(opacity * 100)}%
+              </span>
+            </div>
+            <p className="mt-[9px] text-[10px] text-ink/55">
+              Red areas show where the detector found AI patterns.
+            </p>
+          </>
+        ) : (
+          <p className="text-[11px] text-ink/55">
+            Switch to the Heatmap tab to see where detectors looked.
+          </p>
         )}
       </div>
-    </section>
+    </div>
   );
+}
+
+function ImageFrame({
+  preview,
+  heatmap,
+  showHeatmap,
+  opacity,
+}: {
+  preview: Preview;
+  heatmap: Heatmap;
+  showHeatmap: boolean;
+  opacity: number;
+}) {
+  if (showHeatmap) {
+    return <HeatmapView preview={preview} heatmap={heatmap} opacity={opacity} />;
+  }
+  return <PreviewImage preview={preview} />;
 }
 
 function PreviewImage({ preview }: { preview: Preview }) {
   if (preview.status === "pending") {
-    return <Skeleton className="aspect-square w-full" />;
+    return <Skeleton className="aspect-[4/3] w-full rounded-card" />;
   }
   if (preview.status === "failed") {
     return <Placeholder text="Preview unavailable" />;
@@ -77,15 +123,13 @@ function HeatmapView({
   preview,
   heatmap,
   opacity,
-  onOpacityChange,
 }: {
   preview: Preview;
   heatmap: Heatmap;
   opacity: number;
-  onOpacityChange: (v: number) => void;
 }) {
   if (heatmap.status === "pending") {
-    return <Skeleton className="aspect-square w-full" />;
+    return <Skeleton className="aspect-[4/3] w-full rounded-card" />;
   }
   if (heatmap.status === "skipped") {
     return (
@@ -104,10 +148,6 @@ function HeatmapView({
     );
   }
 
-  // status === "ready". Two-img composite needs the preview too — if
-  // preview failed or is pending, render the heatmap alone. For
-  // mode="overlayed" (future flag; the Worker currently always asks
-  // for transparent) render it alone with no slider.
   const previewReady = preview.status === "ready";
   const canComposite = heatmap.mode === "transparent" && previewReady;
 
@@ -122,42 +162,25 @@ function HeatmapView({
   }
 
   return (
-    <div>
-      <div className="relative">
-        <img
-          src={previewReady ? preview.url : ""}
-          alt="Uploaded image"
-          className="block w-full rounded-card bg-paper-alt"
-        />
-        <img
-          src={heatmap.url}
-          alt="Heatmap overlay"
-          style={{ opacity }}
-          className="pointer-events-none absolute inset-0 h-full w-full rounded-card"
-        />
-      </div>
-      <label className="mt-4 block">
-        <span className="mb-1 block text-xs text-ink/55">
-          Heatmap opacity · {Math.round(opacity * 100)}%
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={Math.round(opacity * 100)}
-          onChange={(e) => onOpacityChange(Number(e.target.value) / 100)}
-          aria-label="Heatmap opacity"
-          className="w-full accent-cobalt"
-        />
-      </label>
+    <div className="relative">
+      <img
+        src={previewReady ? preview.url : ""}
+        alt="Uploaded image"
+        className="block w-full rounded-card bg-paper-alt"
+      />
+      <img
+        src={heatmap.url}
+        alt="Heatmap overlay"
+        style={{ opacity }}
+        className="pointer-events-none absolute inset-0 h-full w-full rounded-card"
+      />
     </div>
   );
 }
 
 function Placeholder({ text, subtext }: { text: string; subtext?: string }) {
   return (
-    <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card bg-paper-alt px-6 text-center text-ink/55">
+    <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-card bg-paper-alt px-6 text-center text-ink/55">
       <ImageOff className="h-6 w-6" aria-hidden />
       <div className="text-sm font-medium text-ink">{text}</div>
       {subtext && <p className="max-w-xs text-xs">{subtext}</p>}
