@@ -1,6 +1,6 @@
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
-import type { Preview } from "@verify/shared";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
@@ -8,22 +8,40 @@ import { resolveErrorCopy } from "../lib/errors";
 import { useScan } from "../lib/polling";
 import { ResultPage } from "./ResultPage";
 
-// /scan/:id route. Owns polling and swaps between:
-//   - polling  → ScanningState (image frame + sweep + "Analyzing"
-//                copy + progressive steps list)
-//   - partial  → ResultPage (with skeletons for still-loading bits)
-//   - complete → ResultPage (fully populated)
-//   - error    → inline error panel (step 7 promotes full-page errors
-//                to the dedicated ErrorPage per ERRORS.md)
+// /scan/:id route. Owns polling and swaps between ScanningState and
+// ResultPage based on the scan's top-level state. See lib/polling.ts
+// for the state machine.
 //
-// SCAN_NOT_FOUND and SCAN_TIMEOUT surface via hook.error and are
-// terminal; retry affordance lands in step 7.
+// The uploaded image rides through as `state.blobUrl` from HomePage's
+// navigate() call. We hold it in component state and revoke on unmount.
+// On a page refresh the blobUrl is gone (nav state doesn't persist
+// through a reload) — we gracefully fall back to the gradient
+// placeholder and keep polling; the verdict arrives regardless.
+
+/** Nav-state payload passed from HomePage → ScanningPage. */
+export type ScanningNavState = {
+  /** Object URL for the File the user just uploaded. ScanningPage
+   *  revokes it on unmount. Absent after a page refresh. */
+  blobUrl?: string;
+};
 
 export function ScanningPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const scanId = id ?? "";
   const { scan, error } = useScan(scanId);
+
+  // Capture the blob URL once on mount so it survives re-renders even
+  // if the router clears state later. Revoke on unmount to avoid a
+  // leak in long-lived sessions (user scans many images in one tab).
+  const navState = (location.state ?? null) as ScanningNavState | null;
+  const [blobUrl] = useState<string | undefined>(() => navState?.blobUrl);
+  useEffect(() => {
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
 
   if (error) {
     const { headline, body } = resolveErrorCopy(error.code, error.message);
@@ -42,7 +60,7 @@ export function ScanningPage() {
   }
 
   if (!scan || scan.state === "polling") {
-    return <ScanningState preview={scan?.preview} />;
+    return <ScanningState blobUrl={blobUrl} />;
   }
 
   if (scan.state === "error") {
@@ -75,11 +93,11 @@ function AnimatedDots() {
   );
 }
 
-function ScanningState({ preview }: { preview?: Preview }) {
+function ScanningState({ blobUrl }: { blobUrl?: string }) {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col md:mx-auto md:max-w-[640px] md:px-10 md:py-10">
-      {/* Mobile back-row — desktop uses the sidebar for nav, no back row. */}
+      {/* Mobile back-row. Desktop uses sidebar nav, no back row. */}
       <div className="flex items-center gap-2.5 px-5 py-3.5 md:hidden">
         <button
           type="button"
@@ -104,7 +122,7 @@ function ScanningState({ preview }: { preview?: Preview }) {
       </div>
 
       <div className="px-5 pb-6 md:px-0">
-        <ScanImage preview={preview} />
+        <ScanImage blobUrl={blobUrl} />
 
         {/* Mobile analyzing text — desktop puts it above the image. */}
         <div className="mt-5 text-center md:hidden">
@@ -121,60 +139,79 @@ function ScanningState({ preview }: { preview?: Preview }) {
   );
 }
 
-function ScanImage({ preview }: { preview?: Preview }) {
-  return (
-    <div className="relative overflow-hidden rounded-[14px] aspect-square bg-gradient-to-br from-[#E8DFD0] to-[#D9C8A8] md:aspect-[4/3]">
-      {preview?.status === "ready" ? (
-        <img
-          src={preview.url}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : null}
-
-      {/* Cobalt sweep bar, animated top → bottom. */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div
-          className="scan-sweep absolute inset-x-0 h-[40%] border-b-[1.5px] border-cobalt"
-          style={{
-            background:
-              "linear-gradient(180deg, transparent 0%, rgba(22, 82, 240, 0.25) 50%, transparent 100%)",
-          }}
-        />
+function ScanImage({ blobUrl }: { blobUrl?: string }) {
+  // Image drives the container's size. `w-fit` makes the positioned
+  // parent shrink to the image's intrinsic dimensions so the sweep
+  // and corner brackets overlay exactly on top. max-h on mobile keeps
+  // a tall portrait from pushing the rest of the UI below the fold.
+  // No blob URL (e.g. after a refresh): fall back to the gradient
+  // placeholder with a sensible aspect so the sweep still renders.
+  if (!blobUrl) {
+    return (
+      <div className="relative mx-auto w-full overflow-hidden rounded-[14px] aspect-square bg-gradient-to-br from-[#E8DFD0] to-[#D9C8A8] md:aspect-[4/3] md:max-w-[540px]">
+        <Sweep />
+        <Corners />
       </div>
-
-      {/* Corner brackets. */}
-      <CornerBracket className="left-3 top-3" d="M2 8V2h6" />
-      <CornerBracket className="right-3 top-3" d="M18 8V2h-6" />
-      <CornerBracket className="bottom-3 left-3" d="M2 12v6h6" />
-      <CornerBracket className="bottom-3 right-3" d="M18 12v6h-6" />
+    );
+  }
+  return (
+    <div className="relative mx-auto w-fit">
+      <img
+        src={blobUrl}
+        alt=""
+        className="block h-auto w-auto max-w-full rounded-[14px] max-h-[70vh] md:max-w-[540px] md:max-h-none"
+      />
+      <Sweep />
+      <Corners />
     </div>
   );
 }
 
-function CornerBracket({ className, d }: { className: string; d: string }) {
+function Sweep() {
   return (
-    <svg
-      aria-hidden
-      viewBox="0 0 20 20"
-      className={`absolute h-[22px] w-[22px] ${className}`}
-    >
-      <path
-        d={d}
-        stroke="#1652F0"
-        strokeWidth={2}
-        fill="none"
-        strokeLinecap="round"
+    <div className="absolute inset-0 overflow-hidden rounded-[14px] pointer-events-none">
+      <div
+        className="scan-sweep absolute inset-x-0 h-[40%] border-b-[1.5px] border-cobalt"
+        style={{
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(22, 82, 240, 0.25) 50%, transparent 100%)",
+        }}
       />
-    </svg>
+    </div>
   );
 }
 
-// Progressive steps list. Backend doesn't expose staged progress
-// today — these are aspirational during polling and all four states
-// are derivable from the hook's knowledge: we're here because submit
-// succeeded (first two done), verdict is still pending (third active),
-// heatmap waits for verdict (fourth pending).
+function Corners() {
+  const items: [string, string][] = [
+    ["left-3 top-3", "M2 8V2h6"],
+    ["right-3 top-3", "M18 8V2h-6"],
+    ["bottom-3 left-3", "M2 12v6h6"],
+    ["bottom-3 right-3", "M18 12v6h-6"],
+  ];
+  return (
+    <>
+      {items.map(([pos, d]) => (
+        <svg
+          key={pos}
+          aria-hidden
+          viewBox="0 0 20 20"
+          className={`absolute h-[22px] w-[22px] pointer-events-none ${pos}`}
+        >
+          <path
+            d={d}
+            stroke="#1652F0"
+            strokeWidth={2}
+            fill="none"
+            strokeLinecap="round"
+          />
+        </svg>
+      ))}
+    </>
+  );
+}
+
+// Progressive steps list. Backend doesn't expose staged progress —
+// these are aspirational during polling.
 type StepState = "done" | "active" | "pending";
 type Step = { label: string; state: StepState };
 
@@ -193,11 +230,7 @@ function StepsList() {
           key={s.label}
           className={[
             "flex items-center gap-[11px] text-[13px]",
-            s.state === "pending"
-              ? "opacity-[0.42]"
-              : s.state === "done"
-                ? "text-ink"
-                : "text-ink",
+            s.state === "pending" ? "opacity-[0.42]" : "text-ink",
           ].join(" ")}
         >
           <StepMarker state={s.state} />
@@ -221,7 +254,10 @@ function StepMarker({ state }: { state: StepState }) {
   if (state === "active") {
     return (
       <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-cobalt" strokeWidth={1.5} />
+        <Loader2
+          className="h-3.5 w-3.5 animate-spin text-cobalt"
+          strokeWidth={1.5}
+        />
       </span>
     );
   }
