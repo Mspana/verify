@@ -27,18 +27,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Session doesn't block rendering — the cookie ride-along from the Worker
   // lands as a Set-Cookie on the response either way.
   useEffect(() => {
-    postSession()
-      .then((s) => {
-        // Smoke test for Phase 3 Step 1: confirms the dev proxy is live and
-        // cookies are flowing. Remove in a later step once the session is
-        // wired into real UI.
-        // eslint-disable-next-line no-console
-        console.info("[verify] session userId:", s.userId);
-      })
-      .catch((e) => {
-        // eslint-disable-next-line no-console
-        console.error("[verify] session request failed:", e);
-      });
+    void postSession().catch(() => {
+      // Silent: session is idempotent on our side and the Worker's session
+      // middleware mints a cookie on every /api/* request regardless. A
+      // failure here means the Worker is unreachable, which the health
+      // probe below will surface via the degraded banner.
+    });
 
     let cancelled = false;
     const probe = () => {
