@@ -31,10 +31,10 @@ export function ResultPage({ scan }: Props) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-12">
       <header className="mb-4">
-        <h1 className="truncate text-lg font-medium text-ink-muted">
+        <h1 className="truncate text-lg font-medium text-ink/55">
           {scan.filename}
         </h1>
-        <p className="mt-0.5 text-xs text-ink-muted">
+        <p className="mt-0.5 text-xs text-ink/55">
           Scanned {formatRelative(scan.createdAt)}
         </p>
       </header>
@@ -44,7 +44,7 @@ export function ResultPage({ scan }: Props) {
       {showDisagreement && (
         <div
           role="alert"
-          className="mt-4 flex items-start gap-3 rounded-card border border-human-accent/30 bg-human-fill px-4 py-3 text-sm text-human-accent"
+          className="mt-4 flex items-start gap-3 rounded-card border border-human-accent/30 bg-human-fill px-4 py-3 text-sm text-human-ink"
         >
           <AlertTriangle
             className="mt-0.5 h-4 w-4 flex-shrink-0"
@@ -127,7 +127,7 @@ export function ResultPage({ scan }: Props) {
 
       {(scan.analysis.status === "failed" ||
         scan.analysis.status === "skipped") && (
-        <p className="mt-6 text-sm text-ink-muted">
+        <p className="mt-6 text-sm text-ink/55">
           Detailed analysis unavailable for this image.
         </p>
       )}
@@ -135,7 +135,7 @@ export function ResultPage({ scan }: Props) {
       <section className="mt-8" aria-labelledby="signals-heading">
         <h2
           id="signals-heading"
-          className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted"
+          className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/55"
         >
           Signals
         </h2>

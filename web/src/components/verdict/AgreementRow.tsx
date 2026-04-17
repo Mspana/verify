@@ -39,7 +39,7 @@ export function AgreementRow({ agreement }: Props) {
   const copy = COPY[agreement];
   const bar = BAR[agreement];
   return (
-    <div className="flex items-start gap-3 rounded-card border border-paper-edge bg-paper p-4">
+    <div className="flex items-start gap-3 rounded-card border border-border bg-paper p-4">
       <div
         aria-hidden
         className="mt-1 flex flex-col gap-0.5"
@@ -49,14 +49,14 @@ export function AgreementRow({ agreement }: Props) {
           <div
             key={i}
             className={`h-1 w-6 rounded-full ${
-              i < bar.filled ? bar.accent : "bg-paper-edge"
+              i < bar.filled ? bar.accent : "bg-border"
             }`}
           />
         ))}
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium">{copy.label}</div>
-        <p className="mt-0.5 text-xs text-ink-muted">{copy.body}</p>
+        <p className="mt-0.5 text-xs text-ink/55">{copy.body}</p>
       </div>
     </div>
   );

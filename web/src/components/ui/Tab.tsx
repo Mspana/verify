@@ -26,7 +26,7 @@ export function Tabs<T extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="flex border-b border-paper-edge"
+      className="flex border-b border-border"
     >
       {tabs.map((t) => {
         const isActive = t.id === active;
@@ -41,7 +41,7 @@ export function Tabs<T extends string>({
               "relative -mb-px px-3 py-2 text-sm transition-colors",
               isActive
                 ? "text-ink border-b-2 border-ink font-medium"
-                : "text-ink-muted hover:text-ink border-b-2 border-transparent",
+                : "text-ink/55 hover:text-ink border-b-2 border-transparent",
             ].join(" ")}
           >
             {t.label}

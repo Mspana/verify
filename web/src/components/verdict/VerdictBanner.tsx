@@ -19,17 +19,17 @@ const VARIANT: Record<
 > = {
   human: {
     fill: "bg-human-fill",
-    accent: "text-human-accent",
+    accent: "text-human-ink",
     chipBg: "bg-human-accent/10",
   },
   ai: {
     fill: "bg-ai-fill",
-    accent: "text-ai-accent",
+    accent: "text-ai-ink",
     chipBg: "bg-ai-accent/10",
   },
   uncertain: {
     fill: "bg-uncertain-fill",
-    accent: "text-uncertain-accent",
+    accent: "text-uncertain-ink",
     chipBg: "bg-uncertain-accent/10",
   },
 };
@@ -44,11 +44,11 @@ export function VerdictBanner({ verdict }: Props) {
   }
   if (verdict.status === "failed") {
     return (
-      <div className="rounded-card border border-paper-edge bg-paper p-6">
-        <div className="text-base font-semibold text-ink-muted">
+      <div className="rounded-card border border-border bg-paper p-6">
+        <div className="text-base font-semibold text-ink/55">
           Verdict unavailable
         </div>
-        <p className="mt-1 text-sm text-ink-muted">
+        <p className="mt-1 text-sm text-ink/55">
           The scan couldn't produce a verdict. Try again with a different image.
         </p>
       </div>
@@ -99,7 +99,7 @@ function Metric({
 }) {
   return (
     <div>
-      <dt className="text-xs text-ink-muted uppercase tracking-wide">
+      <dt className="text-xs text-ink/55 uppercase tracking-wide">
         {label}
       </dt>
       <dd className={`mt-1 text-2xl font-semibold tabular-nums ${accent}`}>

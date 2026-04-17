@@ -71,7 +71,7 @@ function ScanningState() {
       <Loader2 className="h-8 w-8 animate-spin text-cobalt" aria-hidden />
       <div>
         <div className="text-lg font-semibold">Analyzing image</div>
-        <p className="mt-1 text-sm text-ink-muted">
+        <p className="mt-1 text-sm text-ink/55">
           This usually takes 5–15 seconds.
         </p>
       </div>

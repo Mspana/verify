@@ -12,7 +12,7 @@ export function ImageTags({ tags }: Props) {
       {tags.map((t) => (
         <li
           key={t}
-          className="rounded-btn bg-paper-edge px-2 py-1 text-xs text-ink-muted"
+          className="rounded-btn bg-paper-alt px-2 py-1 text-xs text-ink/55"
         >
           {t}
         </li>

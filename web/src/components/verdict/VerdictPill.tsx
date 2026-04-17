@@ -12,9 +12,9 @@ const LABEL_COPY: Record<VerdictLabel, string> = {
 };
 
 const LABEL_CLS: Record<VerdictLabel, string> = {
-  human: "bg-human-fill text-human-accent",
-  ai: "bg-ai-fill text-ai-accent",
-  uncertain: "bg-uncertain-fill text-uncertain-accent",
+  human: "bg-human-fill text-human-ink",
+  ai: "bg-ai-fill text-ai-ink",
+  uncertain: "bg-uncertain-fill text-uncertain-ink",
 };
 
 type Props = {
@@ -26,7 +26,7 @@ export function VerdictPill({ verdict, className = "" }: Props) {
   if (verdict.status === "pending") {
     return (
       <span
-        className={`inline-flex items-center rounded-btn px-2 py-1 text-xs bg-paper-edge text-ink-muted ${className}`}
+        className={`inline-flex items-center rounded-btn px-2 py-1 text-xs bg-paper-alt text-ink/55 ${className}`}
       >
         Scanning…
       </span>
@@ -35,7 +35,7 @@ export function VerdictPill({ verdict, className = "" }: Props) {
   if (verdict.status === "failed") {
     return (
       <span
-        className={`inline-flex items-center rounded-btn px-2 py-1 text-xs bg-paper-edge text-ink-muted ${className}`}
+        className={`inline-flex items-center rounded-btn px-2 py-1 text-xs bg-paper-alt text-ink/55 ${className}`}
       >
         Failed
       </span>

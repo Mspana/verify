@@ -2,7 +2,7 @@ import { AlertTriangle, Info } from "lucide-react";
 import type { ReactNode } from "react";
 
 // Small inline notice. Uses uncertain-fill for warnings/errors (amber)
-// and paper-edge for neutral info, both muted so they read as a status
+// and paper-alt for neutral info, both muted so they read as a status
 // rather than an alert. Full-page error rendering lives elsewhere.
 
 type Props = {
@@ -14,8 +14,8 @@ type Props = {
 export function Banner({ kind = "info", headline, children }: Props) {
   const isError = kind === "error";
   const cls = isError
-    ? "bg-uncertain-fill text-uncertain-accent border-uncertain-accent/30"
-    : "bg-paper-edge text-ink border-ink/10";
+    ? "bg-uncertain-fill text-uncertain-ink border-uncertain-accent/30"
+    : "bg-paper-alt text-ink border-ink/10";
   const Icon = isError ? AlertTriangle : Info;
   return (
     <div

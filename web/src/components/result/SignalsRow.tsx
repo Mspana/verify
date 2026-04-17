@@ -43,16 +43,16 @@ export function SignalsRow({ signals }: Props) {
       {items.map((i, idx) => (
         <div
           key={idx}
-          className="flex items-start gap-2 rounded-card border border-paper-edge bg-paper px-3 py-2"
+          className="flex items-start gap-2 rounded-card border border-border bg-paper px-3 py-2"
         >
           <i.icon
-            className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-muted"
+            className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink/55"
             aria-hidden
           />
           <div className="min-w-0">
             <dt className="truncate text-xs font-medium">{i.label}</dt>
             {i.detail && (
-              <dd className="truncate text-xs text-ink-muted">{i.detail}</dd>
+              <dd className="truncate text-xs text-ink/55">{i.detail}</dd>
             )}
           </div>
         </div>

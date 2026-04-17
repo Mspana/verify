@@ -62,7 +62,7 @@ export function HomePage() {
     <div className="mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-12">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold">扫描 · Scan</h1>
-        <p className="mt-1 text-sm text-ink-muted">
+        <p className="mt-1 text-sm text-ink/55">
           Upload an image to check whether it's AI generated.
         </p>
       </header>
@@ -107,7 +107,7 @@ export function HomePage() {
           <Banner kind="info">{scansError}</Banner>
         )}
         {!scansError && scans === null && (
-          <div className="text-sm text-ink-muted">Loading…</div>
+          <div className="text-sm text-ink/55">Loading…</div>
         )}
         {!scansError && scans?.length === 0 && (
           <EmptyState

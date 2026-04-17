@@ -17,12 +17,12 @@ export function ScanRow({ scan }: Props) {
   return (
     <Link
       to={`/scan/${encodeURIComponent(scan.id)}`}
-      className="flex items-center gap-3 rounded-card border border-paper-edge bg-paper p-3 transition-colors hover:bg-paper-edge"
+      className="flex items-center gap-3 rounded-card border border-border bg-paper p-3 transition-colors hover:bg-paper-alt"
     >
       <Thumbnail scan={scan} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{scan.filename}</div>
-        <div className="text-xs text-ink-muted">
+        <div className="text-xs text-ink/55">
           {formatRelative(scan.createdAt)}
         </div>
       </div>
@@ -37,14 +37,14 @@ function Thumbnail({ scan }: { scan: Scan }) {
       <img
         src={scan.preview.url}
         alt=""
-        className="h-12 w-12 flex-shrink-0 rounded-btn object-cover bg-paper-edge"
+        className="h-12 w-12 flex-shrink-0 rounded-btn object-cover bg-paper-alt"
       />
     );
   }
   return (
     <div
       aria-hidden
-      className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-btn bg-paper-edge text-ink-muted"
+      className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-btn bg-paper-alt text-ink/55"
     >
       <ImageIcon className="h-5 w-5" />
     </div>

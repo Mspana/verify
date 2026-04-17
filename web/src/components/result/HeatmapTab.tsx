@@ -31,7 +31,7 @@ export function HeatmapTab({ preview, heatmap }: Props) {
   const [opacity, setOpacity] = useState<number>(DEFAULT_OPACITY);
 
   return (
-    <section className="rounded-card border border-paper-edge bg-paper overflow-hidden">
+    <section className="rounded-card border border-border bg-paper overflow-hidden">
       <Tabs
         tabs={[
           { id: "original", label: "Original" },
@@ -68,7 +68,7 @@ function PreviewImage({ preview }: { preview: Preview }) {
     <img
       src={preview.url}
       alt="Uploaded image"
-      className="block w-full rounded-card bg-paper-edge"
+      className="block w-full rounded-card bg-paper-alt"
     />
   );
 }
@@ -116,7 +116,7 @@ function HeatmapView({
       <img
         src={heatmap.url}
         alt="Heatmap"
-        className="block w-full rounded-card bg-paper-edge"
+        className="block w-full rounded-card bg-paper-alt"
       />
     );
   }
@@ -127,7 +127,7 @@ function HeatmapView({
         <img
           src={previewReady ? preview.url : ""}
           alt="Uploaded image"
-          className="block w-full rounded-card bg-paper-edge"
+          className="block w-full rounded-card bg-paper-alt"
         />
         <img
           src={heatmap.url}
@@ -137,7 +137,7 @@ function HeatmapView({
         />
       </div>
       <label className="mt-4 block">
-        <span className="mb-1 block text-xs text-ink-muted">
+        <span className="mb-1 block text-xs text-ink/55">
           Heatmap opacity · {Math.round(opacity * 100)}%
         </span>
         <input
@@ -157,7 +157,7 @@ function HeatmapView({
 
 function Placeholder({ text, subtext }: { text: string; subtext?: string }) {
   return (
-    <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card bg-paper-edge px-6 text-center text-ink-muted">
+    <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card bg-paper-alt px-6 text-center text-ink/55">
       <ImageOff className="h-6 w-6" aria-hidden />
       <div className="text-sm font-medium text-ink">{text}</div>
       {subtext && <p className="max-w-xs text-xs">{subtext}</p>}

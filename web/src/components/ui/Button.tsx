@@ -19,8 +19,8 @@ const BASE =
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-cobalt text-paper hover:bg-cobalt/90",
   secondary:
-    "bg-paper text-ink border border-ink/20 hover:bg-paper-edge",
-  ghost: "bg-transparent text-ink hover:bg-paper-edge",
+    "bg-paper text-ink border border-ink/20 hover:bg-paper-alt",
+  ghost: "bg-transparent text-ink hover:bg-paper-alt",
 };
 
 const SIZES: Record<Size, string> = {

@@ -43,10 +43,10 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
   const base =
     "relative flex flex-col items-center justify-center gap-3 rounded-frame border-2 border-dashed px-6 py-16 text-center transition-colors";
   const state = disabled
-    ? "border-paper-edge bg-paper text-ink-muted cursor-not-allowed"
+    ? "border-border bg-paper text-ink/55 cursor-not-allowed"
     : dragging
       ? "border-cobalt bg-cobalt/5 text-ink cursor-pointer"
-      : "border-ink/15 bg-paper hover:bg-paper-edge text-ink cursor-pointer";
+      : "border-border bg-paper hover:bg-paper-alt text-ink cursor-pointer";
 
   return (
     <div
@@ -72,7 +72,7 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
       {selectedFile ? (
         <>
           <div className="text-sm font-medium">{selectedFile.name}</div>
-          <div className="text-xs text-ink-muted">
+          <div className="text-xs text-ink/55">
             Tap to choose a different image
           </div>
         </>
@@ -81,7 +81,7 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
           <div className="text-base font-medium">
             Tap to upload, or drop an image
           </div>
-          <div className="text-xs text-ink-muted">
+          <div className="text-xs text-ink/55">
             JPG, PNG, HEIC — up to 10 MB
           </div>
         </>

@@ -19,7 +19,7 @@ type Props = {
 export function KeyIndicators({ items }: Props) {
   if (items.length === 0) {
     return (
-      <p className="text-sm text-ink-muted">
+      <p className="text-sm text-ink/55">
         No specific indicators highlighted for this image.
       </p>
     );
@@ -29,7 +29,7 @@ export function KeyIndicators({ items }: Props) {
       {items.map((ind, i) => (
         <li
           key={i}
-          className={`rounded-card border border-paper-edge border-l-4 bg-paper px-4 py-3 text-sm ${ACCENT[ind.supports]}`}
+          className={`rounded-card border border-border border-l-4 bg-paper px-4 py-3 text-sm ${ACCENT[ind.supports]}`}
         >
           {ind.label}
         </li>

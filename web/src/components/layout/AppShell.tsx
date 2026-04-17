@@ -66,10 +66,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function Sidebar() {
   return (
-    <aside className="hidden md:flex md:w-[180px] md:flex-col md:border-r md:border-paper-edge md:px-4 md:py-6">
+    <aside className="hidden md:flex md:w-[180px] md:flex-col md:border-r md:border-border md:px-4 md:py-6">
       <div className="mb-8 px-2">
         <div className="text-lg font-semibold leading-tight">真伪</div>
-        <div className="text-sm text-ink-muted leading-tight">Verify</div>
+        <div className="text-sm text-ink/55 leading-tight">Verify</div>
       </div>
       <nav className="flex flex-col gap-1">
         {NAV.map((item) => (
@@ -82,7 +82,7 @@ function Sidebar() {
                 "flex items-center gap-3 rounded-btn px-3 py-2 text-sm transition-colors",
                 isActive
                   ? "bg-ink text-paper"
-                  : "text-ink hover:bg-paper-edge",
+                  : "text-ink hover:bg-paper-alt",
               ].join(" ")
             }
           >
@@ -91,7 +91,7 @@ function Sidebar() {
               {item.secondary ? (
                 <>
                   <span className="font-medium">{item.primary}</span>{" "}
-                  <span className="text-ink-muted">· {item.secondary}</span>
+                  <span className="text-ink/55">· {item.secondary}</span>
                 </>
               ) : (
                 item.primary
@@ -108,7 +108,7 @@ function BottomTabs() {
   return (
     <nav
       aria-label="Primary"
-      className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-paper-edge bg-paper/95 backdrop-blur"
+      className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border bg-paper/95 backdrop-blur"
     >
       <ul className="grid grid-cols-3">
         {NAV.map((item) => (
@@ -119,7 +119,7 @@ function BottomTabs() {
               className={({ isActive }) =>
                 [
                   "flex flex-col items-center justify-center gap-1 py-3 text-xs",
-                  isActive ? "text-ink" : "text-ink-muted",
+                  isActive ? "text-ink" : "text-ink/55",
                 ].join(" ")
               }
             >
@@ -139,7 +139,7 @@ function DegradedBanner() {
   return (
     <div
       role="status"
-      className="bg-uncertain-fill text-uncertain-accent border-b border-uncertain-accent/30 px-4 py-2 text-sm"
+      className="bg-uncertain-fill text-uncertain-ink border-b border-uncertain-accent/30 px-4 py-2 text-sm"
     >
       Scanning is temporarily unavailable. Existing scans can still be viewed.
     </div>
