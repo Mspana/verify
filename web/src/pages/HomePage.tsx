@@ -10,7 +10,6 @@ import { EmptyState } from "../components/history/EmptyState";
 import { ScanRow } from "../components/history/ScanRow";
 import { ScanButton } from "../components/scan/ScanButton";
 import { UploadArea } from "../components/scan/UploadArea";
-import type { ScanningNavState } from "./ScanningPage";
 
 // Home screen matching 01-home.html. Mobile column: eyebrow → title
 // → upload-area → full-width CTA → recent scans. Desktop: same column
@@ -45,12 +44,7 @@ export function HomePage() {
     setUpload({ kind: "running" });
     try {
       const { scanId } = await runUpload(file);
-      // Create the blob URL only after upload succeeds so we don't leak
-      // one on the error path. ScanningPage owns revocation on unmount.
-      const blobUrl = URL.createObjectURL(file);
-      navigate(`/scan/${encodeURIComponent(scanId)}`, {
-        state: { blobUrl } satisfies ScanningNavState,
-      });
+      navigate(`/scan/${encodeURIComponent(scanId)}`);
     } catch (e) {
       const { headline, body } =
         e instanceof ApiError
