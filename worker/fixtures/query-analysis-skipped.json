@@ -1,0 +1,17 @@
+{
+  "id": "00000000-0000-4000-8000-000000000005",
+  "status": "done",
+  "result": 12.5,
+  "result_details": {
+    "is_valid": true,
+    "detection_step": 3,
+    "final_result": "Real",
+    "confidence": 12.5,
+    "heatmap_status": "ready",
+    "heatmap_url": "https://storage.truthscan.example/heatmap/abc123",
+    "analysis_results_status": "skipped",
+    "analysis_results": null,
+    "warnings": []
+  },
+  "preview_url": "https://storage.truthscan.example/preview/abc123"
+}

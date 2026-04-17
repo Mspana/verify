@@ -1,0 +1,46 @@
+{
+  "id": "c991ca4e-0475-488c-a4ec-b20c7dd6e623",
+  "status": "done",
+  "result": 2.43608169257641,
+  "result_details": {
+    "is_valid": true,
+    "detection_step": 3,
+    "final_result": "Real",
+    "metadata": [
+      "No Information Detected",
+      "Could not find anything from ExifTool and Pillow metadata"
+    ],
+    "metadata_basic_source": null,
+    "ocr": null,
+    "ml_model": ["Real", 2.4360816925764084],
+    "confidence": 2.4360816925764084,
+    "analysis_results": {
+      "imageTags": ["walrus", "wildlife", "beach", "resting", "animals"],
+      "agreement": "strong",
+      "confidence": 97.56,
+      "keyIndicators": [
+        "Natural skin and fur textures consistent with wild-caught photography",
+        "Lighting and shadows match the beach environment"
+      ],
+      "detailedReasoning": "The image shows a walrus resting on a beach with lighting, textures, and background consistent with a real photograph.",
+      "visualPatterns": ["Organic, non-repeating noise typical of camera sensors"],
+      "recommendations": [
+        "No additional verification needed for this image",
+        "Cross-reference with the source if provenance is important"
+      ]
+    },
+    "analysis_results_status": "ready",
+    "error_message": null,
+    "heatmap_url": null,
+    "heatmap_status": null,
+    "warnings": [
+      {
+        "type": "screen_recapture",
+        "label": "Normal",
+        "metrics": { "is_screen": false },
+        "confidence": 100
+      }
+    ]
+  },
+  "preview_url": "https://ai-image-detector-prod.nyc3.digitaloceanspaces.com/previews/c991ca4e.jpg"
+}

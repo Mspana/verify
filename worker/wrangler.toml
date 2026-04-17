@@ -3,12 +3,20 @@ main = "src/index.ts"
 compatibility_date = "2026-04-16"
 compatibility_flags = ["nodejs_compat"]
 
-# Default (production) config
+# Secrets (set per-env via `wrangler secret put <NAME> --env <env>`):
+#   TRUTHSCAN_API_KEY   — TruthScan detection API key (per-env)
+#   COOKIE_SIGNING_KEY  — 32+ byte random string for HMAC (per-env; rotating invalidates sessions)
+# Local development reads them from .dev.vars (gitignored).
+
 [[kv_namespaces]]
 binding = "VERIFY_KV"
 id = "ec8e2822db754dce993b45ce8309937c"
 
-# Staging environment
+# 04:00 UTC = noon Beijing: avoids the midnight-UTC cron rush and gives us
+# daylight hours to investigate a failure before the next run.
+[triggers]
+crons = ["0 4 * * *"]
+
 [env.staging]
 name = "verify-api-staging"
 
@@ -16,7 +24,9 @@ name = "verify-api-staging"
 binding = "VERIFY_KV"
 id = "15173986aaec46deb8577fb97675cd26"
 
-# Production environment
+[env.staging.triggers]
+crons = ["0 4 * * *"]
+
 [env.production]
 name = "verify-api"
 routes = [
@@ -26,3 +36,6 @@ routes = [
 [[env.production.kv_namespaces]]
 binding = "VERIFY_KV"
 id = "ec8e2822db754dce993b45ce8309937c"
+
+[env.production.triggers]
+crons = ["0 4 * * *"]

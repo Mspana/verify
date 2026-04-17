@@ -1,0 +1,35 @@
+{
+  "id": "00000000-0000-4000-8000-000000000004",
+  "status": "done",
+  "result": 90.2371538185235,
+  "result_details": {
+    "is_valid": true,
+    "detection_step": 3,
+    "final_result": "AI Generated",
+    "confidence": 90.2371538185235,
+    "metadata": ["EXIF: Canon EOS 5D"],
+    "ocr": ["OCR did not detect AI", 0.0],
+    "ml_model": ["AI Generated", 90.2371538185235],
+    "heatmap_status": "ready",
+    "heatmap_url": "https://storage.truthscan.example/heatmap/abc123",
+    "analysis_results_status": "ready",
+    "analysis_results": {
+      "imageTags": ["person", "portrait", "outdoor", "vineyard", "smiling"],
+      "agreement": "strong",
+      "confidence": 92,
+      "keyIndicators": [
+        "Unnaturally smooth skin texture",
+        "Consistent lighting anomalies"
+      ],
+      "detailedReasoning": "The image shows clear signs of AI generation with unnaturally smooth textures and consistent lighting patterns not typical of real photography.",
+      "visualPatterns": ["Uniform noise pattern typical of diffusion models"],
+      "recommendations": [
+        "Cross-reference with original source if available",
+        "Check for metadata inconsistencies",
+        "Compare with known AI generation patterns"
+      ]
+    },
+    "warnings": []
+  },
+  "preview_url": "https://storage.truthscan.example/preview/abc123"
+}

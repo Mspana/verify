@@ -1,0 +1,44 @@
+{
+  "id": "00000000-0000-4000-8000-000000000006",
+  "status": "done",
+  "result": 78.4,
+  "result_details": {
+    "is_valid": true,
+    "detection_step": 3,
+    "final_result": "AI Generated",
+    "confidence": 78.4,
+    "metadata": ["EXIF: iPhone 13 Pro"],
+    "ocr": ["OCR did not detect AI", 0.0],
+    "ml_model": ["AI Generated", 78.4],
+    "heatmap_status": "ready",
+    "heatmap_url": "https://storage.truthscan.example/heatmap/abc123",
+    "analysis_results_status": "ready",
+    "analysis_results": {
+      "imageTags": ["portrait"],
+      "agreement": "moderate",
+      "confidence": 78,
+      "keyIndicators": ["Watermark partially obscured"],
+      "detailedReasoning": "Watermark detected; recapture artefacts suggest the image was filmed from a screen.",
+      "visualPatterns": [],
+      "recommendations": ["Request the original file from the source."]
+    },
+    "warnings": [
+      {
+        "type": "screen_recapture",
+        "label": "screen",
+        "metrics": { "is_screen": true },
+        "confidence": 99.99
+      },
+      {
+        "type": "watermark",
+        "label": "Gemini",
+        "confidence": 0.95
+      },
+      {
+        "type": "blur_dark",
+        "label": "Blurred"
+      }
+    ]
+  },
+  "preview_url": "https://storage.truthscan.example/preview/abc123"
+}
