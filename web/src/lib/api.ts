@@ -196,6 +196,10 @@ export function getScan(scanId: string): Promise<Scan> {
 
 // === History ===
 
+// Worker uses `deleted`, not `trash`, as the query param — the
+// ScanListQuery type in shared/ enforces the right key but it's worth
+// noting here so anyone tracing a "where does ?trash=true go" question
+// from spec/PR text doesn't end up confused.
 export function getScans(q: ScanListQuery = {}): Promise<ScanListResponse> {
   return req<ScanListResponse>(`/api/scans${encodeQuery(q)}`);
 }

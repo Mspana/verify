@@ -4,7 +4,6 @@ import {
   formatFileSize,
   formatPercent,
   formatRelative,
-  formatTrashCountdown,
 } from "./format";
 
 const NOW = new Date("2026-04-17T12:00:00Z");
@@ -60,28 +59,3 @@ describe("formatFileSize", () => {
   });
 });
 
-describe("formatTrashCountdown", () => {
-  it("renders 'Deletes in 30 days' at the moment of deletion", () => {
-    expect(formatTrashCountdown("2026-04-17T12:00:00Z", NOW)).toBe(
-      "Deletes in 30 days",
-    );
-  });
-  it("renders 'Deletes in 22 days' eight days into the window", () => {
-    expect(formatTrashCountdown("2026-04-09T12:00:00Z", NOW)).toBe(
-      "Deletes in 22 days",
-    );
-  });
-  it("renders 'Deletes tomorrow' with one day left", () => {
-    expect(formatTrashCountdown("2026-03-19T12:00:00Z", NOW)).toBe(
-      "Deletes tomorrow",
-    );
-  });
-  it("renders 'Deletes today' at or past the 30-day mark", () => {
-    expect(formatTrashCountdown("2026-03-18T12:00:00Z", NOW)).toBe(
-      "Deletes today",
-    );
-    expect(formatTrashCountdown("2026-02-01T12:00:00Z", NOW)).toBe(
-      "Deletes today",
-    );
-  });
-});

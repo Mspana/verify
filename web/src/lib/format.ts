@@ -43,18 +43,3 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/**
- * Trash countdown — "Deletes in 22 days", "Deletes today". Hard-coded
- * 30-day window matches worker/src/handlers/scan.ts `MAX_SCAN_AGE_FOR_RESTORE_MS`.
- */
-export function formatTrashCountdown(
-  deletedAtIso: string,
-  now: Date = new Date(),
-): string {
-  const deleted = new Date(deletedAtIso).getTime();
-  const ageMs = now.getTime() - deleted;
-  const daysLeft = Math.max(0, Math.ceil((30 * 86400000 - ageMs) / 86400000));
-  if (daysLeft <= 0) return "Deletes today";
-  if (daysLeft === 1) return "Deletes tomorrow";
-  return `Deletes in ${daysLeft} days`;
-}

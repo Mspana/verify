@@ -1,5 +1,6 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, RotateCcw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { MouseEvent } from "react";
 import type { Scan, VerdictLabel } from "@verify/shared";
 
 import { formatPercent, formatRelative } from "../../lib/format";
@@ -10,11 +11,23 @@ import { VerdictStatus } from "../verdict/VerdictStatus";
 //         chevron right.
 // Desktop: larger thumb, (filename on top, inline dot+label + "Confidence N%"
 //          below), timestamp column, chevron right.
-// Confidence only shows when verdict.status === "ready" — pending/failed
-// renders just the dot+label.
+//
+// Variants:
+//   default — active scan; renders timestamp + optional delete button.
+//   trash   — soft-deleted scan; suppresses the timestamp entirely
+//             (the user is already in /history?view=trash; a "deleted
+//             N days ago" pebble adds noise without adding info) and
+//             swaps the delete button for restore.
+//
+// Action buttons (delete / restore) sit OUTSIDE the row's clickable
+// area visually but inside the same Link DOM-wise; their onClick stops
+// propagation so the parent navigation doesn't fire.
 
 type Props = {
   scan: Scan;
+  variant?: "default" | "trash";
+  onDelete?: () => void;
+  onRestore?: () => void;
 };
 
 const THUMB_FILL: Record<VerdictLabel, string> = {
@@ -23,11 +36,18 @@ const THUMB_FILL: Record<VerdictLabel, string> = {
   uncertain: "bg-uncertain-fill text-uncertain-ink",
 };
 
-export function ScanRow({ scan }: Props) {
+export function ScanRow({
+  scan,
+  variant = "default",
+  onDelete,
+  onRestore,
+}: Props) {
+  const showTimestamp = variant === "default";
+
   return (
     <Link
       to={`/scan/${encodeURIComponent(scan.id)}`}
-      className="flex items-center gap-3 rounded-card border border-border bg-white p-2.5 transition-colors hover:bg-paper-alt md:gap-4 md:p-4"
+      className="group flex items-center gap-3 rounded-card border border-border bg-white p-2.5 transition-colors hover:bg-paper-alt md:gap-4 md:p-4"
     >
       <Thumbnail scan={scan} />
 
@@ -49,25 +69,89 @@ export function ScanRow({ scan }: Props) {
             )}
           </div>
         </div>
-        {/* Mobile: verdict on top, filename · relative time below. */}
+        {/* Mobile: verdict on top, filename (· relative time on default) below. */}
         <div className="md:hidden">
           <VerdictStatus verdict={scan.verdict} />
           <p className="mt-0.5 truncate text-[11px] text-ink/55">
-            {scan.filename} · {formatRelative(scan.createdAt)}
+            {showTimestamp
+              ? `${scan.filename} · ${formatRelative(scan.createdAt)}`
+              : scan.filename}
           </p>
         </div>
       </div>
 
-      {/* Desktop-only timestamp column. */}
-      <p className="hidden flex-shrink-0 text-[11px] text-ink/55 md:block">
-        {formatRelative(scan.createdAt)}
-      </p>
+      {/* Desktop-only timestamp column — suppressed entirely on the trash variant. */}
+      {showTimestamp && (
+        <p className="hidden flex-shrink-0 text-[11px] text-ink/55 md:block">
+          {formatRelative(scan.createdAt)}
+        </p>
+      )}
+
+      {/* Action button (delete on default, restore on trash). The
+          parent <Link> still owns navigation; stopPropagation +
+          preventDefault keep the row click from firing. */}
+      {variant === "default" && onDelete && (
+        <RowActionButton
+          icon={Trash2}
+          label="Delete scan"
+          onActivate={onDelete}
+          variant="danger"
+        />
+      )}
+      {variant === "trash" && onRestore && (
+        <RowActionButton
+          icon={RotateCcw}
+          label="Restore scan"
+          onActivate={onRestore}
+          variant="neutral"
+        />
+      )}
 
       <ChevronRight
         className="h-4 w-4 flex-shrink-0 text-ink/40"
         aria-hidden
       />
     </Link>
+  );
+}
+
+function RowActionButton({
+  icon: Icon,
+  label,
+  onActivate,
+  variant,
+}: {
+  icon: typeof Trash2;
+  label: string;
+  onActivate: () => void;
+  variant: "danger" | "neutral";
+}) {
+  const handle = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onActivate();
+  };
+  // Always visible on mobile (no hover), fade in on hover for desktop.
+  const visibilityCls =
+    "opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100";
+  const colorCls =
+    variant === "danger"
+      ? "text-ink/55 hover:bg-human-fill hover:text-human-ink"
+      : "text-ink/55 hover:bg-paper-alt hover:text-ink";
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      aria-label={label}
+      title={label}
+      className={[
+        "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-btn transition",
+        visibilityCls,
+        colorCls,
+      ].join(" ")}
+    >
+      <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+    </button>
   );
 }
 

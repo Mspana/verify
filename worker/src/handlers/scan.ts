@@ -493,8 +493,12 @@ async function readJson<T>(req: Request): Promise<T | null> {
   }
 }
 
-/** Strip internal-only fields (userId, filePath, submittedAt, etc.) before
- *  returning a scan to the client. */
+/** Strip internal-only fields (userId, filePath, submittedAt, deletedAt,
+ *  etc.) before returning a scan to the client. The trash view doesn't
+ *  surface a deletion countdown — users on /history?view=trash already
+ *  know they deleted it; the Restore button covers the only useful
+ *  affordance — so deletedAt stays Worker-internal alongside other
+ *  bookkeeping the cron uses for purging. */
 function publicScan(record: ScanRecord): Scan {
   return {
     id: record.id,

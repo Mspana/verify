@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { Clock, ScanLine, User } from "lucide-react";
 
 import { getHealth, postSession } from "../../lib/api";
+import { ToastProvider } from "../ui/Toast";
 
 // Mobile: bottom tab bar stuck to the bottom edge.
 // Desktop (md+): 200px left sidebar with paper-alt bg; active nav
@@ -46,14 +47,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-full flex flex-col md:flex-row bg-paper text-ink">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        {!healthy && <DegradedBanner />}
-        <main className="flex-1 pb-[72px] md:pb-0">{children}</main>
+    <ToastProvider>
+      <div className="min-h-full flex flex-col md:flex-row bg-paper text-ink">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          {!healthy && <DegradedBanner />}
+          <main className="flex-1 pb-[72px] md:pb-0">{children}</main>
+        </div>
+        <BottomTabs />
       </div>
-      <BottomTabs />
-    </div>
+    </ToastProvider>
   );
 }
 
