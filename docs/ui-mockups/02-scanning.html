@@ -39,9 +39,12 @@
     align-items: start;
   }
 
+  /* translateY percentages are relative to the element's own height,
+     not the container. Sweep is 40% of container, so 250% =
+     (container / sweep) × 100 exits the sweep fully at the bottom. */
   @keyframes sweep {
     0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
+    100% { transform: translateY(250%); }
   }
   @keyframes dot-fade {
     0%, 80%, 100% { opacity: 0.2; }

@@ -21,12 +21,19 @@
 /* Scanning-state animations — only used on /scan/:id while polling.
  * Declared here rather than inline so Tailwind's JIT doesn't have to
  * parse arbitrary-value keyframes on every render. */
+/* translateY percentages are relative to the element's own height,
+ * not the container. Sweep is height:40% of container, so 100%
+ * translate only shifts it 40% of container height — leaving an
+ * ~80% dead zone at the bottom the sweep never reaches. 250% moves
+ * the sweep's top from -40% (above) to +100% (at container bottom),
+ * so the bottom of the sweep exits the container before restart.
+ * (container / sweep × 100 = 100 / 40 × 100 = 250.) */
 @keyframes verify-sweep {
   0% {
     transform: translateY(-100%);
   }
   100% {
-    transform: translateY(100%);
+    transform: translateY(250%);
   }
 }
 @keyframes verify-dot {
