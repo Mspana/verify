@@ -17,13 +17,19 @@ import type { ErrorCode } from "@verify/shared";
  * Where the error renders.
  *
  * - `inline`: banner above the upload area, scoped to the home screen.
- * - `full-page`: dedicated scan-error page with retry/go-back actions.
- * - `quota-screen`: the dedicated "Daily limit reached" layout.
- * - `site-banner`: top-of-every-page banner; upload area is disabled.
+ *   Used for client-side validation rejects the user can correct
+ *   immediately (wrong type, too big, bad name).
+ * - `full-page`: dedicated error screen with icon circle, title, body,
+ *   action row, error-code footer. Renders in place inside AppShell so
+ *   the sidebar and nav remain functional.
+ * - `quota-screen`: full-page variant tuned amber for the "daily limit
+ *   reached" case — not a failure, a product limit.
+ * - `site-banner`: top-of-every-page bar. UPSTREAM_DOWN (red) and
+ *   RATE_LIMITED (amber, auto-dismiss).
  * - `soft-asset`: muted tile inside a result section (heatmap tab,
- *   analysis area, preview slot) — scan is still `complete`.
- * - `toast-redirect`: silent redirect to home with a transient toast.
- * - `silent`: logged only; never surfaced.
+ *   analysis area, preview slot). Scan stays `complete`.
+ * - `silent`: logged only; never surfaced (SESSION_INVALID — Worker
+ *   auto-reissues, no user-visible effect).
  */
 export type ErrorSurface =
   | "inline"
@@ -31,10 +37,20 @@ export type ErrorSurface =
   | "quota-screen"
   | "site-banner"
   | "soft-asset"
-  | "toast-redirect"
   | "silent";
 
-export type ErrorAction = "retry" | "go-back" | "scan-another" | "see-history";
+/**
+ * Abstract action tokens. The concrete label + handler are resolved by
+ * the rendering screen, which knows whether "retry" means "re-submit
+ * the same file" or "go back to the upload area."
+ */
+export type ErrorAction =
+  | "retry"
+  | "go-back"
+  | "go-home"
+  | "refresh"
+  | "scan-another"
+  | "see-history";
 
 export type ErrorUx = {
   surface: ErrorSurface;
@@ -47,6 +63,8 @@ export type ErrorUx = {
 };
 
 export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
+  // Client-side validation: user chose a bad file. Inline banner with
+  // a Try again / Cancel pair per the upload-rejected mockup.
   FILE_TOO_LARGE: {
     surface: "inline",
     headline: "File too large",
@@ -67,6 +85,9 @@ export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
     headline: "Filename not accepted",
     body: "Rename the file and try again.",
   },
+
+  // Upload / submit / scan lifecycle failures — full-page red with
+  // Retry + Go back.
   UPLOAD_FAILED: {
     surface: "full-page",
     headline: "Upload couldn't finish",
@@ -78,8 +99,8 @@ export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
     // The upload helper retries once with a fresh URL before surfacing.
     // If we reach this entry, that retry also failed.
     surface: "full-page",
-    headline: "Upload couldn't finish",
-    body: "We couldn't confirm the upload. Please try again.",
+    headline: "Your upload expired",
+    body: "We couldn't confirm the upload in time. Please try again.",
     primary: "retry",
     secondary: "go-back",
   },
@@ -90,17 +111,6 @@ export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
     primary: "retry",
     secondary: "go-back",
   },
-  QUOTA_EXCEEDED: {
-    surface: "quota-screen",
-    headline: "Daily limit reached",
-    body: "You've used all your scans for today. Your limit resets at midnight (Beijing time).",
-    secondary: "see-history",
-  },
-  SCAN_NOT_FOUND: {
-    surface: "toast-redirect",
-    headline: "That scan isn't available.",
-    body: "That scan isn't available.",
-  },
   SCAN_FAILED: {
     surface: "full-page",
     headline: "Scan couldn't finish",
@@ -109,12 +119,34 @@ export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
     secondary: "scan-another",
   },
   SCAN_TIMEOUT: {
+    // Client-synthesized after 2 min of non-terminal polling —
+    // the Worker never emits this code.
     surface: "full-page",
     headline: "Scan couldn't finish",
     body: "The scan took longer than expected.",
     primary: "retry",
     secondary: "scan-another",
   },
+
+  // Product limit, not a failure. Amber, no Retry.
+  QUOTA_EXCEEDED: {
+    surface: "quota-screen",
+    headline: "Daily scan limit reached",
+    body: "You've used all your scans for today.",
+    secondary: "see-history",
+  },
+
+  // Shareable scan URL visited by a stranger, or a purged trash scan.
+  // Full-page (not toast-redirect — hiding information with an
+  // auto-navigate is worse UX).
+  SCAN_NOT_FOUND: {
+    surface: "full-page",
+    headline: "Scan not found",
+    body: "This scan doesn't exist or has been permanently deleted.",
+    primary: "go-home",
+  },
+
+  // Soft asset failures — handled inline inside ResultPage sections.
   HEATMAP_UNAVAILABLE: {
     surface: "soft-asset",
     headline: "Heatmap unavailable",
@@ -130,34 +162,42 @@ export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
     headline: "Preview unavailable",
     body: "The scan is still available — just without a preview thumbnail.",
   },
+
+  // Cookie verify failed — Worker silently reissues; frontend never sees it.
   SESSION_INVALID: {
     surface: "silent",
     headline: "",
     body: "",
   },
+
+  // Site-wide banners.
   UPSTREAM_DOWN: {
     surface: "site-banner",
     headline: "Scanning is temporarily unavailable",
-    body: "Scanning is temporarily unavailable. Existing scans can still be viewed.",
+    body: "The detection service is temporarily unavailable. You can still view your history.",
   },
   RATE_LIMITED: {
-    surface: "full-page",
+    // Cloudflare edge or Worker throttle. Amber banner, auto-dismisses
+    // 30s after the last 429 event; doesn't block navigation.
+    surface: "site-banner",
     headline: "Slow down for a moment",
-    body: "Too many requests from your connection. Please wait a minute and try again.",
-    primary: "retry",
-    secondary: "go-back",
+    body: "Too many requests. Please wait a moment before trying again.",
   },
+
+  // Client sent something the server couldn't parse — client-broken,
+  // not user-fixable. Full-page generic with Refresh.
   INVALID_REQUEST: {
-    surface: "inline",
-    headline: "That didn't work",
-    body: "The request couldn't be processed. Try again, or choose a different file.",
+    surface: "full-page",
+    headline: "Something went wrong",
+    body: "Please refresh the page and try again.",
+    primary: "refresh",
   },
   INTERNAL_ERROR: {
     surface: "full-page",
     headline: "Something went wrong",
-    body: "Please try again.",
-    primary: "retry",
-    secondary: "go-back",
+    body: "Please refresh and try again. If this keeps happening, try again later.",
+    primary: "refresh",
+    secondary: "go-home",
   },
 };
 
@@ -169,7 +209,13 @@ export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
 export function resolveErrorCopy(
   code: ErrorCode,
   serverMessage?: string,
-): { headline: string; body: string; primary?: ErrorAction; secondary?: ErrorAction; surface: ErrorSurface } {
+): {
+  headline: string;
+  body: string;
+  primary?: ErrorAction;
+  secondary?: ErrorAction;
+  surface: ErrorSurface;
+} {
   const ux = ERROR_UX[code];
   return {
     surface: ux.surface,
@@ -179,3 +225,22 @@ export function resolveErrorCopy(
     secondary: ux.secondary,
   };
 }
+
+/**
+ * True when the error wants a red full-page ErrorPage (SCAN_FAILED,
+ * UPLOAD_FAILED, etc.); false for the amber QUOTA_EXCEEDED variant.
+ * Used by consumers that render both through the same screen slot.
+ */
+export function isRedFullPage(code: ErrorCode): boolean {
+  return ERROR_UX[code].surface === "full-page";
+}
+
+/** Concrete label for each abstract ErrorAction token. */
+export const ACTION_LABEL: Record<ErrorAction, string> = {
+  retry: "Retry",
+  "go-back": "Go back",
+  "go-home": "Go to home",
+  refresh: "Refresh",
+  "scan-another": "Scan another image",
+  "see-history": "View history",
+};

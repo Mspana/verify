@@ -3,9 +3,8 @@ import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { Preview } from "@verify/shared";
 
-import { Banner } from "../components/ui/Banner";
-import { Button } from "../components/ui/Button";
-import { resolveErrorCopy } from "../lib/errors";
+import { ErrorPage } from "../components/error/ErrorPage";
+import { ACTION_LABEL, resolveErrorCopy } from "../lib/errors";
 import { useScan } from "../lib/polling";
 import { ResultPage } from "./ResultPage";
 
@@ -30,7 +29,6 @@ export type ScanningNavState = {
 
 export function ScanningPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const location = useLocation();
   const scanId = id ?? "";
   const { scan, error } = useScan(scanId);
@@ -46,19 +44,7 @@ export function ScanningPage() {
   const [uploadedBlobUrl] = useState<string | undefined>(() => navState?.blobUrl);
 
   if (error) {
-    const { headline, body } = resolveErrorCopy(error.code, error.message);
-    return (
-      <div className="mx-auto max-w-2xl px-5 py-10 md:px-10 md:py-16">
-        <Banner kind="error" headline={headline}>
-          {body}
-        </Banner>
-        <div className="mt-4 flex gap-2">
-          <Button variant="secondary" onClick={() => navigate("/")}>
-            Go back
-          </Button>
-        </div>
-      </div>
-    );
+    return <ScanErrorPage code={error.code} serverMessage={error.message} />;
   }
 
   if (!scan || scan.state === "polling") {
@@ -67,22 +53,57 @@ export function ScanningPage() {
 
   if (scan.state === "error") {
     const code = scan.error?.code ?? "SCAN_FAILED";
-    const { headline, body } = resolveErrorCopy(code, scan.error?.message);
-    return (
-      <div className="mx-auto max-w-2xl px-5 py-10 md:px-10 md:py-16">
-        <Banner kind="error" headline={headline}>
-          {body}
-        </Banner>
-        <div className="mt-4 flex gap-2">
-          <Button variant="secondary" onClick={() => navigate("/")}>
-            Scan another image
-          </Button>
-        </div>
-      </div>
-    );
+    return <ScanErrorPage code={code} serverMessage={scan.error?.message} />;
   }
 
   return <ResultPage scan={scan} />;
+}
+
+// Shared error-page rendering for ScanningPage. Resolves abstract
+// action tokens (retry / go-back / go-home / scan-another / refresh /
+// see-history) to concrete labels + handlers. Retry/go-back/go-home/
+// scan-another all navigate to / since we don't hold the uploaded File
+// in scope here — the user picks again from home.
+function ScanErrorPage({
+  code,
+  serverMessage,
+}: {
+  code: import("@verify/shared").ErrorCode;
+  serverMessage?: string;
+}) {
+  const navigate = useNavigate();
+  const copy = resolveErrorCopy(code, serverMessage);
+  const resolveAction = (token: typeof copy.primary) => {
+    switch (token) {
+      case "retry":
+      case "go-back":
+      case "go-home":
+      case "scan-another":
+        return { label: ACTION_LABEL[token], onClick: () => navigate("/") };
+      case "refresh":
+        return {
+          label: ACTION_LABEL.refresh,
+          onClick: () => window.location.reload(),
+        };
+      case "see-history":
+        return {
+          label: ACTION_LABEL["see-history"],
+          onClick: () => navigate("/history"),
+        };
+      default:
+        return undefined;
+    }
+  };
+  return (
+    <ErrorPage
+      variant="red"
+      title={copy.headline}
+      body={copy.body}
+      code={code}
+      primary={resolveAction(copy.primary)}
+      secondary={resolveAction(copy.secondary)}
+    />
+  );
 }
 
 function AnimatedDots() {

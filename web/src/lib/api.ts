@@ -11,6 +11,8 @@ import type {
   UploadUrlResponse,
 } from "@verify/shared";
 
+import { notifyRateLimit } from "./rateLimit";
+
 // Thin fetch wrapper + typed endpoint functions for the Verify Worker.
 // Same-origin in dev (via Vite proxy) and prod (Pages + Workers on one
 // domain), so cookies flow without extra config.
@@ -114,6 +116,15 @@ async function toApiError(res: Response): Promise<ApiError> {
     body = await res.json();
   } catch {
     // fall through to synthesized code
+  }
+
+  // 429s fire the rate-limit notifier so AppShell can surface the
+  // amber banner — EXCEPT for QUOTA_EXCEEDED, which is also a 429 but
+  // semantically a product limit, not a throttle (users see a full-page
+  // quota screen instead; the banner would be redundant noise).
+  if (res.status === 429) {
+    const is429Quota = isWorkerError(body) && body.code === "QUOTA_EXCEEDED";
+    if (!is429Quota) notifyRateLimit();
   }
 
   if (isWorkerError(body)) {
