@@ -330,6 +330,20 @@ Per scan: ~2–4 KB record + two small index entries. Free KV plan: 100K reads/d
 
 ## Deployment
 
+### Deployment architecture — current (2026-04-19)
+
+The Worker serves both the API (`/api/*`) and the static frontend (all other paths, via the Workers Static Assets binding). This consolidation is in place because we haven't yet registered a custom domain; the `*.workers.dev` subdomain can only route to one service, so a Pages + Worker split leaves the frontend unable to reach the API on the same origin (and HttpOnly session cookies won't carry cross-origin).
+
+The split architecture described below is the intended end state once a domain is registered and `/api/*` / `/*` routes can be bound separately.
+
+See commit `3436c89` for the consolidation change. Reverting is roughly:
+
+1. Remove the `[assets]` block from `worker/wrangler.toml`.
+2. Restore the `c.text("Not found", 404)` branch in `worker/src/index.ts`'s `notFound` handler (drop the `env.ASSETS.fetch` fall-through).
+3. Drop the `ASSETS: Fetcher` binding from `worker/src/types.ts`.
+4. Restore `worker/package.json`'s `deploy` script to `wrangler deploy` (the Pages project builds the frontend separately).
+5. Reconfigure the Cloudflare dashboard: re-enable the Pages project, point the domain's `/api/*` at the Worker, and everything else at Pages.
+
 ### Repo layout (monorepo, npm workspaces)
 
 ```
