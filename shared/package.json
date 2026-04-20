@@ -5,7 +5,7 @@
     "main": "./src/index.ts",
     "types": "./src/index.ts",
     "scripts": {
-      "build": "tsc -b",
+      "build": "tsc -b --force",
       "typecheck": "tsc --noEmit"
     }
   }

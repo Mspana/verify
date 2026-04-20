@@ -11,6 +11,7 @@
       "dev:worker": "npm run dev -w worker",
       "dev:web": "npm run dev -w web",
       "build": "npm run build -w shared && npm run build -w worker && npm run build -w web",
+      "deploy:worker": "npm run build -w shared && npm run build -w web && npm run deploy -w worker",
       "typecheck": "npm run typecheck --workspaces --if-present",
       "test": "npm run test --workspaces --if-present"
     },

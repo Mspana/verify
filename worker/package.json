@@ -5,7 +5,7 @@
     "main": "src/index.ts",
     "scripts": {
         "dev": "wrangler dev",
-        "deploy": "npm run build -w shared && npm run build -w web && wrangler deploy",
+        "deploy": "wrangler deploy",
         "typecheck": "tsc --noEmit",
         "test": "vitest run"
     },
