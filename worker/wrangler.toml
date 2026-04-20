@@ -1,4 +1,4 @@
-name = "verify-api"
+name = "verify"
 main = "src/index.ts"
 compatibility_date = "2026-04-16"
 compatibility_flags = ["nodejs_compat"]
@@ -35,7 +35,7 @@ id = "15173986aaec46deb8577fb97675cd26"
 crons = ["0 4 * * *"]
 
 [env.production]
-name = "verify-api"
+name = "verify"
 routes = [
   { pattern = "yourdomain.com/api/*", zone_name = "yourdomain.com" }
 ]
