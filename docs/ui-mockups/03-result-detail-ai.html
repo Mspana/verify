@@ -432,6 +432,14 @@
             </div>
           </div>
 
+          <!--
+            Caption is ALWAYS rendered in the DOM — on the Original
+            tab the live app applies visibility:hidden + aria-hidden
+            so the vertical space is reserved but the text is
+            invisible to both sighted users and screen readers.
+            Prevents a layout shift when toggling tabs. The mockup
+            shows the Heatmap-active state, where it's visible.
+          -->
           <p class="heatmap-caption">Red areas show where the detector found AI patterns.</p>
 
           <div class="heatmap-control">

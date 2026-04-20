@@ -90,11 +90,28 @@ export function HeatmapTab({ preview, heatmap }: Props) {
           heatmap={heatmap}
           showHeatmap={active === "heatmap"}
         />
-        {active === "heatmap" && (
-          <p className="mt-2 text-[10px] text-ink/55">
-            Red areas show where the detector found AI patterns.
-          </p>
-        )}
+        {/*
+          Caption is always rendered so its layout footprint is
+          reserved on both tabs — toggling visibility (rather than
+          mount/unmount) prevents everything below (reasoning, recs,
+          signals) from jumping when the user flips between Original
+          and Heatmap. `visibility: hidden` preserves the box but
+          hides pixels; `aria-hidden` silences screen readers when
+          the caption isn't explaining what's on screen.
+          If the text ever wraps to two lines at a narrow viewport,
+          this still works correctly — the hidden element renders at
+          its true rendered height, so reserved space matches the
+          visible state exactly.
+        */}
+        <p
+          className="mt-2 text-[10px] text-ink/55"
+          style={{
+            visibility: active === "heatmap" ? "visible" : "hidden",
+          }}
+          aria-hidden={active !== "heatmap"}
+        >
+          Red areas show where the detector found AI patterns.
+        </p>
       </div>
 
       <div className="rounded-[11px] border border-border bg-white px-[14px] py-[13px]">
