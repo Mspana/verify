@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { Clock, ScanLine, User } from "lucide-react";
 
 import { postSession } from "../../lib/api";
@@ -141,18 +141,28 @@ function SystemBanners() {
 }
 
 function BrandBlock() {
+  // Whole brand area (cobalt icon + text) is one clickable Link to
+  // home. Hover lifts the row to bg-paper, the same treatment active
+  // nav items get — discoverable but not so loud that the brand
+  // competes with real nav. focus-visible ring matches the global
+  // outline-cobalt declaration in styles/index.css for keyboard nav.
+  // No-underline since this is a brand surface, not link text.
   return (
-    <div className="flex items-center gap-[9px]">
+    <Link
+      to="/"
+      aria-label="真伪 · Verify — home"
+      className="flex items-center gap-[9px] rounded-btn -mx-1 px-1 py-0.5 transition-colors hover:bg-paper no-underline"
+    >
       <div
         aria-hidden
         className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-cobalt text-[12px] font-medium text-paper"
       >
         眼
       </div>
-      <div className="text-[15px] font-medium leading-none">
+      <div className="text-[15px] font-medium leading-none text-ink">
         真伪 <span className="opacity-70">·</span> Verify
       </div>
-    </div>
+    </Link>
   );
 }
 
