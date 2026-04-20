@@ -1,5 +1,6 @@
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { Preview } from "@verify/shared";
 
 import { Banner } from "../components/ui/Banner";
@@ -19,11 +20,30 @@ import { ResultPage } from "./ResultPage";
 // SCAN_NOT_FOUND and SCAN_TIMEOUT surface via hook.error and are
 // terminal; retry affordance lands in step 7.
 
+/** Nav-state payload passed from HomePage → ScanningPage. The blob URL
+ *  is created in HomePage right before navigate() so we can render the
+ *  user's own image immediately, instead of waiting for the proxied
+ *  preview from TruthScan. Absent after a page refresh. */
+export type ScanningNavState = {
+  blobUrl?: string;
+};
+
 export function ScanningPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const scanId = id ?? "";
   const { scan, error } = useScan(scanId);
+
+  // Capture the blob URL once on mount so it survives re-renders (and
+  // any router state-clearing). DELIBERATELY no useEffect cleanup that
+  // revokes — React 18 strict mode fires effect cleanups on the dev
+  // double-mount, which would kill the URL before the <img> can use
+  // it. The leak is bounded (one blob per scan started in a session,
+  // typically a few MB at most) and the browser revokes everything on
+  // tab close. Fine for MVP.
+  const navState = (location.state ?? null) as ScanningNavState | null;
+  const [uploadedBlobUrl] = useState<string | undefined>(() => navState?.blobUrl);
 
   if (error) {
     const { headline, body } = resolveErrorCopy(error.code, error.message);
@@ -42,7 +62,7 @@ export function ScanningPage() {
   }
 
   if (!scan || scan.state === "polling") {
-    return <ScanningState preview={scan?.preview} />;
+    return <ScanningState preview={scan?.preview} blobUrl={uploadedBlobUrl} />;
   }
 
   if (scan.state === "error") {
@@ -75,7 +95,13 @@ function AnimatedDots() {
   );
 }
 
-function ScanningState({ preview }: { preview?: Preview }) {
+function ScanningState({
+  preview,
+  blobUrl,
+}: {
+  preview?: Preview;
+  blobUrl?: string;
+}) {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col md:mx-auto md:max-w-[640px] md:px-10 md:py-10">
@@ -104,7 +130,7 @@ function ScanningState({ preview }: { preview?: Preview }) {
       </div>
 
       <div className="px-5 pb-6 md:px-0">
-        <ScanImage preview={preview} />
+        <ScanImage preview={preview} blobUrl={blobUrl} />
 
         {/* Mobile analyzing text — desktop puts it above the image. */}
         <div className="mt-5 text-center md:hidden">
@@ -121,34 +147,76 @@ function ScanningState({ preview }: { preview?: Preview }) {
   );
 }
 
-function ScanImage({ preview }: { preview?: Preview }) {
-  return (
-    <div className="relative overflow-hidden rounded-[14px] aspect-square bg-gradient-to-br from-[#E8DFD0] to-[#D9C8A8] md:aspect-[4/3]">
-      {preview?.status === "ready" ? (
-        <img
-          src={preview.url}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : null}
+function ScanImage({
+  preview,
+  blobUrl,
+}: {
+  preview?: Preview;
+  blobUrl?: string;
+}) {
+  // Source priority:
+  //   1. blobUrl  — the local image, available instantly, before
+  //      TruthScan returns anything. This is the typical case during
+  //      polling.
+  //   2. preview.url — the proxied preview from the Worker once it's
+  //      ready. Falls back here if the user refreshed mid-scan and
+  //      lost the blob URL from nav state.
+  //   3. neither  — render the gradient placeholder so the sweep
+  //      still has something to overlay.
+  const src =
+    blobUrl ?? (preview?.status === "ready" ? preview.url : undefined);
 
-      {/* Cobalt sweep bar, animated top → bottom. */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div
-          className="scan-sweep absolute inset-x-0 h-[40%] border-b-[1.5px] border-cobalt"
-          style={{
-            background:
-              "linear-gradient(180deg, transparent 0%, rgba(22, 82, 240, 0.25) 50%, transparent 100%)",
-          }}
-        />
+  if (!src) {
+    return (
+      <div className="relative mx-auto w-full overflow-hidden rounded-[14px] aspect-square bg-gradient-to-br from-[#E8DFD0] to-[#D9C8A8] md:aspect-[4/3] md:max-w-[540px]">
+        <SweepOverlay />
+        <Corners />
       </div>
+    );
+  }
 
-      {/* Corner brackets. */}
+  // Image drives the container's size — the sweep and corner brackets
+  // are absolute children sized to the image's actual rendered box.
+  // `w-fit` shrinks the parent to the image's intrinsic width (capped
+  // by max-w-* on the image itself), so we don't crop or letterbox.
+  // Mobile cap: max-h-[70vh] keeps a tall portrait from pushing the
+  // analyzing copy and steps list below the fold. Desktop cap:
+  // max-w-[540px] aligns with the result-page image area width.
+  return (
+    <div className="relative mx-auto w-fit max-w-full">
+      <img
+        src={src}
+        alt=""
+        className="block max-w-full max-h-[70vh] rounded-[14px] md:max-w-[540px] md:max-h-none"
+      />
+      <SweepOverlay />
+      <Corners />
+    </div>
+  );
+}
+
+function SweepOverlay() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[14px]">
+      <div
+        className="scan-sweep absolute inset-x-0 h-[40%] border-b-[1.5px] border-cobalt"
+        style={{
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(22, 82, 240, 0.25) 50%, transparent 100%)",
+        }}
+      />
+    </div>
+  );
+}
+
+function Corners() {
+  return (
+    <>
       <CornerBracket className="left-3 top-3" d="M2 8V2h6" />
       <CornerBracket className="right-3 top-3" d="M18 8V2h-6" />
       <CornerBracket className="bottom-3 left-3" d="M2 12v6h6" />
       <CornerBracket className="bottom-3 right-3" d="M18 12v6h-6" />
-    </div>
+    </>
   );
 }
 
