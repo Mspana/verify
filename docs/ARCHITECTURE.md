@@ -236,7 +236,7 @@ Sequential steps across Browser, Worker, TruthScan, and Spaces:
 
 1. **Client validates** the file (≤10 MB, supported type, filename without spaces). Worker re-validates.
 2. **Worker requests presigned URL** from TruthScan `/get-presigned-url`. TruthScan returns `presigned_url` and `file_path`. Worker reserves a quota slot and writes a scan stub to KV under its own generated scanId.
-3. **Browser PUTs bytes** to Spaces directly using the presigned URL. Content-Type must match the file extension exactly (e.g. `image/jpeg`, not `image/jpg`). Upload progress tracked via XHR or streaming fetch.
+3. **Browser PUTs bytes** to Spaces directly using the presigned URL. The PUT **must** include two headers or Spaces will reject it: `Content-Type` matching the file extension exactly (e.g. `image/jpeg`, not `image/jpg`), and `x-amz-acl: private`. The presigned URL is signed assuming `private` ACL; omitting the header fails the signature. Upload progress tracked via XHR or streaming fetch.
 4. **Browser calls `POST /api/scan/submit`** with the scanId and filePath. Worker prepends the configured TruthScan storage base host to the `file_path` to form an absolute URL, then calls TruthScan `/detect` **without** passing `id` — TruthScan returns a freshly-generated id of its own, which we store on the scan record as `truthscanId`. Commits the quota slot.
 5. **Browser starts the polling loop** (see state machine). The Worker calls TruthScan `/query` using `truthscanId`, not scanId.
 
@@ -245,6 +245,7 @@ Key choices:
 - Two identifiers. `scanId` is ours: generated at upload-url, used as the KV primary key, the URL slug, and the ownership correlator. `truthscanId` is TruthScan's: returned by `/detect`, used for every subsequent `/query`, `/preview`, and `/heatmap` call. See "Identifier correspondence" in Storage for the full mapping and rationale.
 - Quota is two-phase. Step 2 reserves; step 4 commits. A background cleanup reclaims stale reservations (> 10 min without submit). Prevents parallel uploads from both slipping past the cap.
 - TruthScan's `document_id` from the presign response is still discarded — it's a third identifier with no downstream use.
+- **Heatmap may never generate.** TruthScan skips heatmap generation for verdicts it's confident about (most "human" verdicts). The first poll that returns a terminal verdict will carry `heatmap.status: "skipped"` directly — no intermediate `pending`. The scan transitions `polling → complete`, not `polling → partial → complete`. `GET /api/scan/:id/heatmap` returns **404** with body `{"status":"skipped"}` (not 202). The frontend must treat skipped as a terminal non-error state and render the "not available for this image" tile rather than a retry prompt. See the skipped-heatmap entry in `ERRORS.md` for full UX copy.
 
 ---
 
