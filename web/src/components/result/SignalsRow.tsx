@@ -1,4 +1,5 @@
 import { Camera, FileCode, Stamp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Signals } from "@verify/shared";
 
 import { formatPercent } from "../../lib/format";
@@ -13,19 +14,22 @@ type Props = {
 };
 
 export function SignalsRow({ signals }: Props) {
+  const { t } = useTranslation();
   const items: { icon: typeof Camera; label: string; detail?: string }[] = [
     {
       icon: FileCode,
-      label: signals.hasExif ? "EXIF present" : "No EXIF",
+      label: signals.hasExif ? t("signals.exifPresent") : t("signals.exifMissing"),
       detail: signals.hasExif
-        ? "Camera metadata attached"
-        : "No camera metadata",
+        ? t("signals.exifPresentDetail")
+        : t("signals.exifMissingDetail"),
     },
     {
       icon: Camera,
-      label: signals.screenRecapture ? "Screen recapture" : "No screen recapture",
+      label: signals.screenRecapture
+        ? t("signals.screenRecapture")
+        : t("signals.noScreenRecapture"),
       detail: signals.screenRecapture
-        ? "Looks photographed from a screen"
+        ? t("signals.screenRecaptureDetail")
         : undefined,
     },
   ];
@@ -33,8 +37,10 @@ export function SignalsRow({ signals }: Props) {
   if (signals.watermark) {
     items.push({
       icon: Stamp,
-      label: `${signals.watermark.label} watermark`,
-      detail: `${formatPercent(signals.watermark.confidence, 0)} confidence`,
+      label: t("signals.watermarkLabel", { label: signals.watermark.label }),
+      detail: t("signals.watermarkDetail", {
+        value: formatPercent(signals.watermark.confidence, 0),
+      }),
     });
   }
 

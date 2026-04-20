@@ -1,17 +1,9 @@
+import { useTranslation } from "react-i18next";
 import type { Verdict, VerdictLabel } from "@verify/shared";
 
 // Compact status indicator: a small colored dot + inked label.
-// Replaces the earlier VerdictPill shape — mockups consistently use
-// dot+label rather than a bg-filled pill, so a pill was a structural
-// mismatch. The dot uses the verdict's accent color; the label uses
-// the deeper ink variant for readable text. Red/green inversion
-// (human=red, ai=green) is intentional — China-first product.
-
-const LABEL_COPY: Record<VerdictLabel, string> = {
-  human: "Likely real",
-  ai: "AI generated",
-  uncertain: "Can't verify",
-};
+// Red/green inversion (human=red, ai=green) is intentional — China-
+// first product.
 
 const DOT_CLS: Record<VerdictLabel, string> = {
   human: "bg-human-accent",
@@ -23,6 +15,12 @@ const LABEL_CLS: Record<VerdictLabel, string> = {
   human: "text-human-ink",
   ai: "text-ai-ink",
   uncertain: "text-uncertain-ink",
+};
+
+const LABEL_KEY: Record<VerdictLabel, string> = {
+  human: "verdict.label.human",
+  ai: "verdict.label.ai",
+  uncertain: "verdict.label.uncertain",
 };
 
 type Props = {
@@ -39,12 +37,13 @@ const SIZE: Record<"sm" | "md", { text: string; dot: string }> = {
 
 export function VerdictStatus({ verdict, size = "sm", className = "" }: Props) {
   const s = SIZE[size];
+  const { t } = useTranslation();
 
   if (verdict.status === "pending") {
     return (
       <div className={`flex items-center gap-1.5 ${s.text} ${className}`}>
         <span className={`${s.dot} rounded-full bg-ink/20`} aria-hidden />
-        <span className="text-ink/55">Scanning…</span>
+        <span className="text-ink/55">{t("verdict.status.scanning")}</span>
       </div>
     );
   }
@@ -52,7 +51,7 @@ export function VerdictStatus({ verdict, size = "sm", className = "" }: Props) {
     return (
       <div className={`flex items-center gap-1.5 ${s.text} ${className}`}>
         <span className={`${s.dot} rounded-full bg-ink/20`} aria-hidden />
-        <span className="text-ink/55">Failed</span>
+        <span className="text-ink/55">{t("verdict.status.failed")}</span>
       </div>
     );
   }
@@ -64,10 +63,8 @@ export function VerdictStatus({ verdict, size = "sm", className = "" }: Props) {
         aria-hidden
       />
       <span className={`font-medium ${LABEL_CLS[verdict.label]}`}>
-        {LABEL_COPY[verdict.label]}
+        {t(LABEL_KEY[verdict.label])}
       </span>
     </div>
   );
 }
-
-export { LABEL_COPY as verdictLabelCopy };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { Scan } from "@verify/shared";
 
 import { ApiError, deleteScan, getScans, postRestore } from "../lib/api";
@@ -29,6 +30,7 @@ function readView(params: URLSearchParams): View {
 }
 
 export function HistoryPage() {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const view = readView(params);
 
@@ -36,7 +38,6 @@ export function HistoryPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const toast = useToast();
 
-  // Re-fetch on every view toggle. KV reads are cheap; no caching layer.
   useEffect(() => {
     let cancelled = false;
     setScans(null);
@@ -51,13 +52,13 @@ export function HistoryPage() {
         const msg =
           e instanceof ApiError
             ? resolveErrorCopy(e.code, e.message).body
-            : "Couldn't load your scans.";
+            : t("history.couldntLoad");
         setLoadError(msg);
       });
     return () => {
       cancelled = true;
     };
-  }, [view]);
+  }, [view, t]);
 
   const setView = (next: View) => {
     const updated = new URLSearchParams(params);
@@ -76,30 +77,26 @@ export function HistoryPage() {
     try {
       await deleteScan(scan.id);
       toast.show({
-        message: "Scan deleted.",
+        message: t("history.toast.deleted"),
         action: {
-          label: "Undo",
+          label: t("common.undo"),
           onClick: () => void undoDelete(scan, indexBeforeRemoval),
         },
       });
     } catch {
-      // Restore optimistic removal on failure.
       setScans((current) => {
         if (!current) return current;
         const restored = [...current];
         restored.splice(indexBeforeRemoval, 0, scan);
         return restored;
       });
-      toast.show({ message: "Couldn't delete. Try again." });
+      toast.show({ message: t("history.toast.deleteFailed") });
     }
   };
 
   const undoDelete = async (scan: Scan, originalIndex: number) => {
     try {
       await postRestore(scan.id);
-      // Put the row back in its original position. If the list has
-      // shifted (other deletes happened), splice still does the right
-      // thing — at most off by a few; close enough for an undo.
       setScans((current) => {
         if (!current) return current;
         if (current.some((s) => s.id === scan.id)) return current;
@@ -109,7 +106,7 @@ export function HistoryPage() {
         return restored;
       });
     } catch {
-      toast.show({ message: "Couldn't undo. The scan stays in trash." });
+      toast.show({ message: t("history.toast.undoFailed") });
     }
   };
 
@@ -119,10 +116,10 @@ export function HistoryPage() {
     setScans(optimistic);
     try {
       await postRestore(scan.id);
-      toast.show({ message: "Scan restored." });
+      toast.show({ message: t("history.toast.restored") });
     } catch {
       setScans((current) => (current ? [scan, ...current] : current));
-      toast.show({ message: "Couldn't restore. Try again." });
+      toast.show({ message: t("history.toast.restoreFailed") });
     }
   };
 
@@ -130,10 +127,10 @@ export function HistoryPage() {
     <div className="mx-auto max-w-[840px] px-5 pt-2 pb-3.5 md:px-10 md:py-8">
       <header className="mb-[14px] md:mb-[18px]">
         <p className="mb-1.5 text-[11px] uppercase tracking-[0.3px] text-ink/55">
-          Library
+          {t("history.eyebrow")}
         </p>
         <h1 className="text-[20px] font-medium leading-[1.2] md:text-[24px]">
-          History
+          {t("history.title")}
         </h1>
       </header>
 
@@ -145,19 +142,19 @@ export function HistoryPage() {
         className="mt-5"
       >
         <h2 id="scans-heading" className="sr-only">
-          {view === "active" ? "Active scans" : "Trashed scans"}
+          {view === "active" ? t("history.activeScans") : t("history.trashedScans")}
         </h2>
         {loadError && <Banner kind="info">{loadError}</Banner>}
         {!loadError && scans === null && (
-          <div className="text-sm text-ink/55">Loading…</div>
+          <div className="text-sm text-ink/55">{t("common.loading")}</div>
         )}
         {!loadError && scans?.length === 0 && (
           <EmptyState
-            title={view === "active" ? "No scans yet" : "Trash is empty"}
+            title={view === "active" ? t("history.noScansTitle") : t("history.trashEmptyTitle")}
             body={
               view === "active"
-                ? "Your previous scans will appear here."
-                : "Deleted scans land here for 30 days before being purged."
+                ? t("history.previousHere")
+                : t("history.trashExplainer")
             }
           />
         )}
@@ -187,14 +184,13 @@ function ViewToggle({
   view: View;
   onChange: (next: View) => void;
 }) {
-  // Segmented control: paper-alt track, active segment lifts to paper.
-  // Same paper/paper-alt inversion the sidebar nav uses.
+  const { t } = useTranslation();
   const itemBase =
     "flex-1 rounded-btn px-3 py-1.5 text-[12px] transition-colors";
   return (
     <div
       role="tablist"
-      aria-label="Scan view"
+      aria-label={t("history.viewLabel")}
       className="flex gap-1 rounded-btn bg-paper-alt p-1 md:max-w-[260px]"
     >
       <button
@@ -208,7 +204,7 @@ function ViewToggle({
             : "text-ink/55 hover:text-ink",
         ].join(" ")}
       >
-        Active
+        {t("history.active")}
       </button>
       <button
         role="tab"
@@ -221,7 +217,7 @@ function ViewToggle({
             : "text-ink/55 hover:text-ink",
         ].join(" ")}
       >
-        Trash
+        {t("history.trash")}
       </button>
     </div>
   );

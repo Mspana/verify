@@ -1,0 +1,256 @@
+{
+  "brand": {
+    "ariaLabel": "真伪 · Verify — 首页"
+  },
+  "nav": {
+    "scan": "扫描",
+    "history": "历史",
+    "account": "账户",
+    "primaryLabel": "主导航"
+  },
+  "common": {
+    "loading": "加载中…",
+    "dismiss": "关闭",
+    "back": "返回",
+    "seeAll": "查看全部",
+    "tryAgain": "重试",
+    "cancel": "取消",
+    "undo": "撤销"
+  },
+  "language": {
+    "label": "语言",
+    "english": "English",
+    "chinese": "简体中文"
+  },
+  "home": {
+    "eyebrow": "AI 检测",
+    "title": "检测 AI 生成",
+    "recentScans": "最近扫描",
+    "noScansTitle": "还没有扫描记录",
+    "noScansBody": "你的第一次扫描将显示在这里。",
+    "couldntLoad": "无法加载扫描历史。",
+    "genericError": {
+      "headline": "出现错误",
+      "body": "请重试。"
+    }
+  },
+  "upload": {
+    "ariaLabel": "上传图片进行扫描",
+    "tapToUpload": "点击上传",
+    "dragOrClick": "拖入图片或点击上传",
+    "hint": "JPG、PNG、HEIC — 最大 10 MB",
+    "tapToChange": "点击选择其他图片",
+    "detectionOffline": "检测服务暂时不可用。"
+  },
+  "scanning": {
+    "eyebrow": "扫描中",
+    "title": "正在分析图片",
+    "chineseSubtitle": "正在分析图片",
+    "steps": {
+      "uploaded": "已上传",
+      "preprocessing": "预处理",
+      "detecting": "检测 AI 特征",
+      "heatmap": "生成热力图"
+    }
+  },
+  "result": {
+    "eyebrow": "结果",
+    "scanned": "扫描于 {{time}}",
+    "imageTags": "图片标签",
+    "keyIndicators": "关键指标",
+    "conflictingSignals": "冲突信号",
+    "reasoning": "分析说明",
+    "recommendedNextSteps": "建议的下一步",
+    "signals": "信号",
+    "noIndicators": "此图片未标记特定指标。",
+    "analysisUnavailable": "此图片无详细分析。",
+    "runningDeeper": "正在进行深度分析 · 通常 15–30 秒",
+    "disagreementHeadline": "检测器对此图片意见不一致",
+    "disagreementBody": "请对该结论保持额外谨慎。下方各检测器的信号会呈现完整情况。",
+    "heatmapCaption": "红色区域表示检测器发现 AI 特征的位置。",
+    "heatmapTab": "热力图",
+    "originalTab": "原图",
+    "imageView": "图片视图",
+    "previewUnavailable": "预览不可用",
+    "previewUnavailableSub": "扫描仍然可用 — 只是无法加载缩略图。",
+    "heatmapSkippedHeadline": "此图片未生成热力图",
+    "heatmapSkippedBody": "当结论明确时 TruthScan 不会生成热力图。结论仍然准确。",
+    "heatmapUnavailable": "热力图不可用",
+    "heatmapUnavailableBody": "结论仍然准确。此图片无法生成视觉分析。"
+  },
+  "verdict": {
+    "aiLikelihood": "AI 可能性",
+    "sub": {
+      "human": "此图片看起来是人工创作。",
+      "ai": "此图片很可能由 AI 生成。",
+      "uncertain": "我们无法确定。"
+    },
+    "status": {
+      "scanning": "扫描中…",
+      "failed": "失败"
+    },
+    "label": {
+      "human": "很可能真实",
+      "ai": "AI 生成",
+      "uncertain": "无法判断"
+    },
+    "unavailable": "无法得出结论",
+    "unavailableBody": "扫描未能得出结论。请尝试其他图片。",
+    "confidence": "可信度 {{value}}",
+    "agreement": {
+      "heading": "检测器一致性",
+      "strong": "强",
+      "moderate": "中等",
+      "weak": "弱",
+      "disagreement": "存在分歧"
+    },
+    "indicatorHead": {
+      "suggestsAi": "指向 AI",
+      "suggestsReal": "指向真实",
+      "neutral": "中性信号",
+      "mixed": "混合信号"
+    }
+  },
+  "signals": {
+    "exifPresent": "EXIF 存在",
+    "exifMissing": "无 EXIF",
+    "exifPresentDetail": "包含相机元数据",
+    "exifMissingDetail": "无相机元数据",
+    "screenRecapture": "屏幕翻拍",
+    "noScreenRecapture": "非屏幕翻拍",
+    "screenRecaptureDetail": "看起来从屏幕翻拍",
+    "watermarkLabel": "{{label}} 水印",
+    "watermarkDetail": "可信度 {{value}}"
+  },
+  "history": {
+    "eyebrow": "库",
+    "title": "历史",
+    "viewLabel": "扫描视图",
+    "active": "活动",
+    "trash": "回收站",
+    "activeScans": "活动扫描",
+    "trashedScans": "回收站扫描",
+    "couldntLoad": "无法加载扫描记录。",
+    "previousHere": "你以往的扫描会显示在这里。",
+    "trashExplainer": "已删除的扫描会保留 30 天后彻底清除。",
+    "trashEmptyTitle": "回收站为空",
+    "noScansTitle": "还没有扫描记录",
+    "deleteLabel": "删除扫描",
+    "restoreLabel": "恢复扫描",
+    "toast": {
+      "deleted": "扫描已删除。",
+      "deleteFailed": "删除失败。请重试。",
+      "undoFailed": "撤销失败。扫描仍在回收站。",
+      "restored": "扫描已恢复。",
+      "restoreFailed": "恢复失败。请重试。"
+    }
+  },
+  "account": {
+    "title": "账户",
+    "comingSoon": "即将推出。",
+    "languageSection": "语言"
+  },
+  "quota": {
+    "title": "已达到今日扫描上限",
+    "usedAll": "你今天已用完全部 {{limit}} 次扫描。",
+    "resetsShortly": "即将重置",
+    "resetsInHours_other": "{{count}} 小时后重置",
+    "resetsInMinutes_other": "{{count}} 分钟后重置"
+  },
+  "errorPage": {
+    "errorCode": "错误代码："
+  },
+  "errors": {
+    "FILE_TOO_LARGE": {
+      "headline": "文件过大",
+      "body": "最大支持 10 MB。请使用较小的文件或转换为 JPG。"
+    },
+    "FILE_TOO_SMALL": {
+      "headline": "文件过小",
+      "body": "此图片太小，无法分析。"
+    },
+    "UNSUPPORTED_TYPE": {
+      "headline": "不支持的文件类型",
+      "body": "请使用 JPG、PNG 或 HEIC。"
+    },
+    "FILENAME_INVALID": {
+      "headline": "文件名不合规",
+      "body": "请重命名文件后再试。"
+    },
+    "UPLOAD_FAILED": {
+      "headline": "上传未能完成",
+      "body": "连接可能已中断。图片未保存。"
+    },
+    "UPLOAD_EXPIRED": {
+      "headline": "上传已过期",
+      "body": "未能及时确认上传。请重试。"
+    },
+    "SUBMIT_FAILED": {
+      "headline": "无法启动扫描",
+      "body": "检测服务没有响应。图片未被扫描。"
+    },
+    "SCAN_FAILED": {
+      "headline": "扫描未能完成",
+      "body": "分析过程中出现问题。"
+    },
+    "SCAN_TIMEOUT": {
+      "headline": "扫描未能完成",
+      "body": "扫描耗时超出预期。"
+    },
+    "QUOTA_EXCEEDED": {
+      "headline": "已达到今日扫描上限",
+      "body": "你今天已用完全部扫描次数。"
+    },
+    "SCAN_NOT_FOUND": {
+      "headline": "未找到扫描",
+      "body": "此扫描不存在或已被永久删除。"
+    },
+    "HEATMAP_UNAVAILABLE": {
+      "headline": "热力图不可用",
+      "body": "结论仍然准确。此图片无法生成视觉分析。"
+    },
+    "ANALYSIS_UNAVAILABLE": {
+      "headline": "详细分析不可用",
+      "body": "此图片无详细分析。"
+    },
+    "PREVIEW_UNAVAILABLE": {
+      "headline": "预览不可用",
+      "body": "扫描仍然可用 — 只是没有预览缩略图。"
+    },
+    "SESSION_INVALID": {
+      "headline": "",
+      "body": ""
+    },
+    "UPSTREAM_DOWN": {
+      "headline": "扫描暂时不可用",
+      "body": "检测服务暂时不可用。你仍然可以查看历史。"
+    },
+    "RATE_LIMITED": {
+      "headline": "请稍等片刻",
+      "body": "请求过多。请稍等再试。"
+    },
+    "INVALID_REQUEST": {
+      "headline": "出现错误",
+      "body": "请刷新页面重试。"
+    },
+    "INTERNAL_ERROR": {
+      "headline": "出现错误",
+      "body": "请刷新重试。如果问题持续，请稍后再试。"
+    }
+  },
+  "errorActions": {
+    "retry": "重试",
+    "go-back": "返回",
+    "go-home": "回到首页",
+    "refresh": "刷新",
+    "scan-another": "扫描其他图片",
+    "see-history": "查看历史"
+  },
+  "relative": {
+    "justNow": "刚刚",
+    "minuteAgo_other": "{{count}} 分钟前",
+    "hourAgo_other": "{{count}} 小时前",
+    "yesterday": "昨天",
+    "dayAgo_other": "{{count}} 天前"
+  }
+}

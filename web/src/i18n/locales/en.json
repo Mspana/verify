@@ -1,0 +1,261 @@
+{
+  "brand": {
+    "ariaLabel": "真伪 · Verify — home"
+  },
+  "nav": {
+    "scan": "Scan",
+    "history": "History",
+    "account": "Account",
+    "primaryLabel": "Primary"
+  },
+  "common": {
+    "loading": "Loading…",
+    "dismiss": "Dismiss",
+    "back": "Back",
+    "seeAll": "See all",
+    "tryAgain": "Try again",
+    "cancel": "Cancel",
+    "undo": "Undo"
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "chinese": "简体中文"
+  },
+  "home": {
+    "eyebrow": "AI detection",
+    "title": "Check for AI",
+    "recentScans": "Recent scans",
+    "noScansTitle": "No scans yet",
+    "noScansBody": "Your first scan will show up here.",
+    "couldntLoad": "Couldn't load your scan history.",
+    "genericError": {
+      "headline": "Something went wrong",
+      "body": "Please try again."
+    }
+  },
+  "upload": {
+    "ariaLabel": "Upload an image to scan",
+    "tapToUpload": "Tap to upload",
+    "dragOrClick": "Drag an image or click to upload",
+    "hint": "JPG, PNG, HEIC — up to 10 MB",
+    "tapToChange": "Tap to choose a different image",
+    "detectionOffline": "Detection is temporarily offline."
+  },
+  "scanning": {
+    "eyebrow": "Scanning",
+    "title": "Analyzing image",
+    "chineseSubtitle": "正在分析图片",
+    "steps": {
+      "uploaded": "Uploaded",
+      "preprocessing": "Preprocessing",
+      "detecting": "Detecting AI patterns",
+      "heatmap": "Generating heatmap"
+    }
+  },
+  "result": {
+    "eyebrow": "Result",
+    "scanned": "Scanned {{time}}",
+    "imageTags": "Image tags",
+    "keyIndicators": "Key indicators",
+    "conflictingSignals": "Conflicting signals",
+    "reasoning": "Reasoning",
+    "recommendedNextSteps": "Recommended next steps",
+    "signals": "Signals",
+    "noIndicators": "No specific indicators highlighted for this image.",
+    "analysisUnavailable": "Detailed analysis unavailable for this image.",
+    "runningDeeper": "Running deeper analysis · usually 15–30s",
+    "disagreementHeadline": "Our detectors disagreed on this image",
+    "disagreementBody": "Treat this verdict with extra caution. Individual detector signals below tell the full story.",
+    "heatmapCaption": "Red areas show where the detector found AI patterns.",
+    "heatmapTab": "Heatmap",
+    "originalTab": "Original",
+    "imageView": "Image view",
+    "previewUnavailable": "Preview unavailable",
+    "previewUnavailableSub": "The scan is still available — we just couldn't load the thumbnail.",
+    "heatmapSkippedHeadline": "Heatmap not available for this image",
+    "heatmapSkippedBody": "TruthScan doesn't generate one when the verdict is clear. The verdict is still accurate.",
+    "heatmapUnavailable": "Heatmap unavailable",
+    "heatmapUnavailableBody": "The verdict is still accurate. The visual breakdown couldn't be generated for this image."
+  },
+  "verdict": {
+    "aiLikelihood": "AI likelihood",
+    "sub": {
+      "human": "This image appears to be human-made.",
+      "ai": "This image was likely made by AI.",
+      "uncertain": "We're not confident either way."
+    },
+    "status": {
+      "scanning": "Scanning…",
+      "failed": "Failed"
+    },
+    "label": {
+      "human": "Likely real",
+      "ai": "AI generated",
+      "uncertain": "Can't verify"
+    },
+    "unavailable": "Verdict unavailable",
+    "unavailableBody": "The scan couldn't produce a verdict. Try again with a different image.",
+    "confidence": "Confidence {{value}}",
+    "agreement": {
+      "heading": "Detector agreement",
+      "strong": "Strong",
+      "moderate": "Moderate",
+      "weak": "Weak",
+      "disagreement": "Disagreement"
+    },
+    "indicatorHead": {
+      "suggestsAi": "Suggests AI",
+      "suggestsReal": "Suggests real",
+      "neutral": "Neutral signal",
+      "mixed": "Mixed signal"
+    }
+  },
+  "signals": {
+    "exifPresent": "EXIF present",
+    "exifMissing": "No EXIF",
+    "exifPresentDetail": "Camera metadata attached",
+    "exifMissingDetail": "No camera metadata",
+    "screenRecapture": "Screen recapture",
+    "noScreenRecapture": "No screen recapture",
+    "screenRecaptureDetail": "Looks photographed from a screen",
+    "watermarkLabel": "{{label}} watermark",
+    "watermarkDetail": "{{value}} confidence"
+  },
+  "history": {
+    "eyebrow": "Library",
+    "title": "History",
+    "viewLabel": "Scan view",
+    "active": "Active",
+    "trash": "Trash",
+    "activeScans": "Active scans",
+    "trashedScans": "Trashed scans",
+    "couldntLoad": "Couldn't load your scans.",
+    "previousHere": "Your previous scans will appear here.",
+    "trashExplainer": "Deleted scans land here for 30 days before being purged.",
+    "trashEmptyTitle": "Trash is empty",
+    "noScansTitle": "No scans yet",
+    "deleteLabel": "Delete scan",
+    "restoreLabel": "Restore scan",
+    "toast": {
+      "deleted": "Scan deleted.",
+      "deleteFailed": "Couldn't delete. Try again.",
+      "undoFailed": "Couldn't undo. The scan stays in trash.",
+      "restored": "Scan restored.",
+      "restoreFailed": "Couldn't restore. Try again."
+    }
+  },
+  "account": {
+    "title": "Account",
+    "comingSoon": "Coming soon.",
+    "languageSection": "Language"
+  },
+  "quota": {
+    "title": "Daily scan limit reached",
+    "usedAll": "You've used all {{limit}} scans for today.",
+    "resetsShortly": "Resets shortly",
+    "resetsInHours_one": "Resets in {{count}} hour",
+    "resetsInHours_other": "Resets in {{count}} hours",
+    "resetsInMinutes_one": "Resets in {{count}} minute",
+    "resetsInMinutes_other": "Resets in {{count}} minutes"
+  },
+  "errorPage": {
+    "errorCode": "Error code:"
+  },
+  "errors": {
+    "FILE_TOO_LARGE": {
+      "headline": "File too large",
+      "body": "Maximum size is 10 MB. Try a smaller file or convert to JPG."
+    },
+    "FILE_TOO_SMALL": {
+      "headline": "File too small",
+      "body": "This image is too small to analyze."
+    },
+    "UNSUPPORTED_TYPE": {
+      "headline": "Unsupported file type",
+      "body": "Try JPG, PNG, or HEIC."
+    },
+    "FILENAME_INVALID": {
+      "headline": "Filename not accepted",
+      "body": "Rename the file and try again."
+    },
+    "UPLOAD_FAILED": {
+      "headline": "Upload couldn't finish",
+      "body": "Your connection may have dropped. Your image wasn't saved."
+    },
+    "UPLOAD_EXPIRED": {
+      "headline": "Your upload expired",
+      "body": "We couldn't confirm the upload in time. Please try again."
+    },
+    "SUBMIT_FAILED": {
+      "headline": "We couldn't start the scan",
+      "body": "The detection service didn't respond. Your image wasn't scanned."
+    },
+    "SCAN_FAILED": {
+      "headline": "Scan couldn't finish",
+      "body": "Something went wrong with the analysis."
+    },
+    "SCAN_TIMEOUT": {
+      "headline": "Scan couldn't finish",
+      "body": "The scan took longer than expected."
+    },
+    "QUOTA_EXCEEDED": {
+      "headline": "Daily scan limit reached",
+      "body": "You've used all your scans for today."
+    },
+    "SCAN_NOT_FOUND": {
+      "headline": "Scan not found",
+      "body": "This scan doesn't exist or has been permanently deleted."
+    },
+    "HEATMAP_UNAVAILABLE": {
+      "headline": "Heatmap unavailable",
+      "body": "The verdict is still accurate. The visual breakdown couldn't be generated for this image."
+    },
+    "ANALYSIS_UNAVAILABLE": {
+      "headline": "Detailed analysis unavailable",
+      "body": "Detailed analysis unavailable for this image."
+    },
+    "PREVIEW_UNAVAILABLE": {
+      "headline": "Preview unavailable",
+      "body": "The scan is still available — just without a preview thumbnail."
+    },
+    "SESSION_INVALID": {
+      "headline": "",
+      "body": ""
+    },
+    "UPSTREAM_DOWN": {
+      "headline": "Scanning is temporarily unavailable",
+      "body": "The detection service is temporarily unavailable. You can still view your history."
+    },
+    "RATE_LIMITED": {
+      "headline": "Slow down for a moment",
+      "body": "Too many requests. Please wait a moment before trying again."
+    },
+    "INVALID_REQUEST": {
+      "headline": "Something went wrong",
+      "body": "Please refresh the page and try again."
+    },
+    "INTERNAL_ERROR": {
+      "headline": "Something went wrong",
+      "body": "Please refresh and try again. If this keeps happening, try again later."
+    }
+  },
+  "errorActions": {
+    "retry": "Retry",
+    "go-back": "Go back",
+    "go-home": "Go to home",
+    "refresh": "Refresh",
+    "scan-another": "Scan another image",
+    "see-history": "View history"
+  },
+  "relative": {
+    "justNow": "Just now",
+    "minuteAgo_one": "{{count}} minute ago",
+    "minuteAgo_other": "{{count}} minutes ago",
+    "hourAgo_one": "{{count}} hour ago",
+    "hourAgo_other": "{{count}} hours ago",
+    "yesterday": "Yesterday",
+    "dayAgo_one": "{{count}} day ago",
+    "dayAgo_other": "{{count}} days ago"
+  }
+}

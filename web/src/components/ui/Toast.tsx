@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 // Single-toast layer for the app. Mount <ToastHost /> once at the root
 // (we do that in AppShell). Any descendant calls useToast().show({ ... })
@@ -109,6 +110,7 @@ function ToastHost({
   state: ToastState;
   dismiss: () => void;
 }) {
+  const { t } = useTranslation();
   if (state.kind !== "visible") return null;
 
   return (
@@ -141,7 +143,7 @@ function ToastHost({
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Dismiss"
+          aria-label={t("common.dismiss")}
           className="-mr-1 flex h-6 w-6 items-center justify-center rounded text-paper/70 hover:text-paper"
         >
           <X className="h-4 w-4" strokeWidth={1.5} aria-hidden />

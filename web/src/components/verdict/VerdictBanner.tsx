@@ -1,31 +1,18 @@
+import { useTranslation } from "react-i18next";
 import type { Verdict, VerdictLabel } from "@verify/shared";
 
 import { formatPercent } from "../../lib/format";
 import { Skeleton } from "../ui/Skeleton";
 
 // The verdict card at the top-right of the result page (or full-width
-// on mobile). Structure per 03-result-detail-ai.html verdict-banner
-// and 05-pending-and-disagreement.html:
-//
-//   [dot] EYEBROW (bilingual, 11px weight 500)
-//   Headline (22px weight 500, verdict-ink color)
-//   Sub copy  (13px, verdict-ink @ 0.8 opacity)
-//   AI likelihood       90.2%
-//   [  confidence bar   ]
-//
-// Accent = dot + conf bar fill.  Ink variant = headline + sub + label text.
-// Red/green inversion (human=red, ai=green) is intentional per brief.
+// on mobile). Bilingual eyebrow (人工 · HUMAN / AI 生成 · AI / 不确定 ·
+// UNSURE) is part of the visual identity and stays bilingual regardless
+// of locale — matches the brand treatment.
 
 const EYEBROW: Record<VerdictLabel, string> = {
   human: "人工 · HUMAN",
   ai: "AI 生成 · AI",
   uncertain: "不确定 · UNSURE",
-};
-
-const SUB: Record<VerdictLabel, string> = {
-  human: "This image appears to be human-made.",
-  ai: "This image was likely made by AI.",
-  uncertain: "We're not confident either way.",
 };
 
 const FILL: Record<VerdictLabel, string> = {
@@ -54,11 +41,19 @@ const BAR_FILL: Record<VerdictLabel, string> = {
   uncertain: "bg-uncertain-accent",
 };
 
+const SUB_KEY: Record<VerdictLabel, string> = {
+  human: "verdict.sub.human",
+  ai: "verdict.sub.ai",
+  uncertain: "verdict.sub.uncertain",
+};
+
 type Props = {
   verdict: Verdict;
 };
 
 export function VerdictBanner({ verdict }: Props) {
+  const { t } = useTranslation();
+
   if (verdict.status === "pending") {
     return <Skeleton className="h-[152px] w-full rounded-[13px]" />;
   }
@@ -66,10 +61,10 @@ export function VerdictBanner({ verdict }: Props) {
     return (
       <div className="rounded-[13px] border border-border bg-paper p-5">
         <div className="text-base font-semibold text-ink/55">
-          Verdict unavailable
+          {t("verdict.unavailable")}
         </div>
         <p className="mt-1 text-sm text-ink/55">
-          The scan couldn't produce a verdict. Try again with a different image.
+          {t("verdict.unavailableBody")}
         </p>
       </div>
     );
@@ -98,9 +93,9 @@ export function VerdictBanner({ verdict }: Props) {
       >
         {verdict.headline}
       </h2>
-      <p className="mb-[14px] text-[13px] opacity-80">{SUB[label]}</p>
+      <p className="mb-[14px] text-[13px] opacity-80">{t(SUB_KEY[label])}</p>
       <div className="mb-[7px] flex items-baseline justify-between">
-        <p className="text-[11px] opacity-80">AI likelihood</p>
+        <p className="text-[11px] opacity-80">{t("verdict.aiLikelihood")}</p>
         <p className="text-[13px] font-medium tabular-nums">
           {formatPercent(verdict.aiLikelihood, 1)}
         </p>

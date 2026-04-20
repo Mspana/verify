@@ -1,27 +1,18 @@
 import { ChevronRight, RotateCcw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
 import type { Scan, VerdictLabel } from "@verify/shared";
 
 import { formatPercent, formatRelative } from "../../lib/format";
 import { VerdictStatus } from "../verdict/VerdictStatus";
 
 // Stacked-list row matching 01-home.html scan-row-m / scan-row-d.
-// Mobile: thumb left, (dot+label on top, filename + relative time below),
-//         chevron right.
-// Desktop: larger thumb, (filename on top, inline dot+label + "Confidence N%"
-//          below), timestamp column, chevron right.
 //
 // Variants:
 //   default — active scan; renders timestamp + optional delete button.
-//   trash   — soft-deleted scan; suppresses the timestamp entirely
-//             (the user is already in /history?view=trash; a "deleted
-//             N days ago" pebble adds noise without adding info) and
-//             swaps the delete button for restore.
-//
-// Action buttons (delete / restore) sit OUTSIDE the row's clickable
-// area visually but inside the same Link DOM-wise; their onClick stops
-// propagation so the parent navigation doesn't fire.
+//   trash   — soft-deleted scan; suppresses the timestamp and swaps
+//             delete for restore.
 
 type Props = {
   scan: Scan;
@@ -42,6 +33,7 @@ export function ScanRow({
   onDelete,
   onRestore,
 }: Props) {
+  const { t } = useTranslation();
   const showTimestamp = variant === "default";
 
   return (
@@ -52,7 +44,6 @@ export function ScanRow({
       <Thumbnail scan={scan} />
 
       <div className="min-w-0 flex-1">
-        {/* Desktop: filename on top, verdict+confidence below. */}
         <div className="hidden md:block">
           <div className="truncate text-[13px] font-medium leading-tight">
             {scan.filename}
@@ -63,13 +54,14 @@ export function ScanRow({
               <>
                 <span className="text-[11px] text-ink/40">·</span>
                 <span className="text-[11px] text-ink/55">
-                  Confidence {formatPercent(scan.verdict.confidence, 0)}
+                  {t("verdict.confidence", {
+                    value: formatPercent(scan.verdict.confidence, 0),
+                  })}
                 </span>
               </>
             )}
           </div>
         </div>
-        {/* Mobile: verdict on top, filename (· relative time on default) below. */}
         <div className="md:hidden">
           <VerdictStatus verdict={scan.verdict} />
           <p className="mt-0.5 truncate text-[11px] text-ink/55">
@@ -80,20 +72,16 @@ export function ScanRow({
         </div>
       </div>
 
-      {/* Desktop-only timestamp column — suppressed entirely on the trash variant. */}
       {showTimestamp && (
         <p className="hidden flex-shrink-0 text-[11px] text-ink/55 md:block">
           {formatRelative(scan.createdAt)}
         </p>
       )}
 
-      {/* Action button (delete on default, restore on trash). The
-          parent <Link> still owns navigation; stopPropagation +
-          preventDefault keep the row click from firing. */}
       {variant === "default" && onDelete && (
         <RowActionButton
           icon={Trash2}
-          label="Delete scan"
+          label={t("history.deleteLabel")}
           onActivate={onDelete}
           variant="danger"
         />
@@ -101,7 +89,7 @@ export function ScanRow({
       {variant === "trash" && onRestore && (
         <RowActionButton
           icon={RotateCcw}
-          label="Restore scan"
+          label={t("history.restoreLabel")}
           onActivate={onRestore}
           variant="neutral"
         />
@@ -131,7 +119,6 @@ function RowActionButton({
     e.stopPropagation();
     onActivate();
   };
-  // Always visible on mobile (no hover), fade in on hover for desktop.
   const visibilityCls =
     "opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100";
   const colorCls =
@@ -156,11 +143,6 @@ function RowActionButton({
 }
 
 function Thumbnail({ scan }: { scan: Scan }) {
-  // The mockup shows colored-fill thumbnails ("IMG") because there's no
-  // real preview in the doc. In the live app we prefer the actual preview
-  // thumbnail when it's ready; otherwise we fall back to a colored slot
-  // keyed to the verdict, which preserves the mockup's rhythm while
-  // still giving users a sense of the result at a glance.
   const fillCls =
     scan.verdict.status === "ready"
       ? THUMB_FILL[scan.verdict.label]

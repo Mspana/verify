@@ -1,5 +1,7 @@
 import type { ErrorCode } from "@verify/shared";
 
+import i18n from "../i18n";
+
 // Central ErrorCode → UX mapping. One place that says "this code renders
 // how, says what, and offers which actions." Downstream screens (upload
 // area, result page, error page, quota page, toast layer) read from here
@@ -11,7 +13,8 @@ import type { ErrorCode } from "@verify/shared";
 // ERRORS.md's "Errors are for users first" principle. The defaults are
 // fallbacks for client-synthesized errors (SCAN_TIMEOUT, HEIC conversion
 // failure, network throws) and copy-scoped fields the Worker doesn't
-// supply (headline, actions).
+// supply (headline, actions). Defaults are looked up via i18n at call
+// time so locale changes re-render naturally.
 
 /**
  * Where the error renders.
@@ -52,154 +55,78 @@ export type ErrorAction =
   | "scan-another"
   | "see-history";
 
-export type ErrorUx = {
+type ErrorUxConfig = {
   surface: ErrorSurface;
-  /** Default headline; server message is shown below (or replaces body). */
-  headline: string;
-  /** Default body copy when no server message is available. */
-  body: string;
   primary?: ErrorAction;
   secondary?: ErrorAction;
 };
 
-export const ERROR_UX: Record<ErrorCode, ErrorUx> = {
-  // Client-side validation: user chose a bad file. Inline banner with
-  // a Try again / Cancel pair per the upload-rejected mockup.
-  FILE_TOO_LARGE: {
-    surface: "inline",
-    headline: "File too large",
-    body: "Maximum size is 10 MB. Try a smaller file or convert to JPG.",
-  },
-  FILE_TOO_SMALL: {
-    surface: "inline",
-    headline: "File too small",
-    body: "This image is too small to analyze.",
-  },
-  UNSUPPORTED_TYPE: {
-    surface: "inline",
-    headline: "Unsupported file type",
-    body: "Try JPG, PNG, or HEIC.",
-  },
-  FILENAME_INVALID: {
-    surface: "inline",
-    headline: "Filename not accepted",
-    body: "Rename the file and try again.",
-  },
+const ERROR_UX_CONFIG: Record<ErrorCode, ErrorUxConfig> = {
+  FILE_TOO_LARGE: { surface: "inline" },
+  FILE_TOO_SMALL: { surface: "inline" },
+  UNSUPPORTED_TYPE: { surface: "inline" },
+  FILENAME_INVALID: { surface: "inline" },
 
-  // Upload / submit / scan lifecycle failures — full-page red with
-  // Retry + Go back.
-  UPLOAD_FAILED: {
-    surface: "full-page",
-    headline: "Upload couldn't finish",
-    body: "Your connection may have dropped. Your image wasn't saved.",
-    primary: "retry",
-    secondary: "go-back",
-  },
-  UPLOAD_EXPIRED: {
-    // The upload helper retries once with a fresh URL before surfacing.
-    // If we reach this entry, that retry also failed.
-    surface: "full-page",
-    headline: "Your upload expired",
-    body: "We couldn't confirm the upload in time. Please try again.",
-    primary: "retry",
-    secondary: "go-back",
-  },
-  SUBMIT_FAILED: {
-    surface: "full-page",
-    headline: "We couldn't start the scan",
-    body: "The detection service didn't respond. Your image wasn't scanned.",
-    primary: "retry",
-    secondary: "go-back",
-  },
-  SCAN_FAILED: {
-    surface: "full-page",
-    headline: "Scan couldn't finish",
-    body: "Something went wrong with the analysis.",
-    primary: "retry",
-    secondary: "scan-another",
-  },
-  SCAN_TIMEOUT: {
-    // Client-synthesized after 2 min of non-terminal polling —
-    // the Worker never emits this code.
-    surface: "full-page",
-    headline: "Scan couldn't finish",
-    body: "The scan took longer than expected.",
-    primary: "retry",
-    secondary: "scan-another",
-  },
+  UPLOAD_FAILED: { surface: "full-page", primary: "retry", secondary: "go-back" },
+  UPLOAD_EXPIRED: { surface: "full-page", primary: "retry", secondary: "go-back" },
+  SUBMIT_FAILED: { surface: "full-page", primary: "retry", secondary: "go-back" },
+  SCAN_FAILED: { surface: "full-page", primary: "retry", secondary: "scan-another" },
+  SCAN_TIMEOUT: { surface: "full-page", primary: "retry", secondary: "scan-another" },
 
-  // Product limit, not a failure. Amber, no Retry.
-  QUOTA_EXCEEDED: {
-    surface: "quota-screen",
-    headline: "Daily scan limit reached",
-    body: "You've used all your scans for today.",
-    secondary: "see-history",
-  },
+  QUOTA_EXCEEDED: { surface: "quota-screen", secondary: "see-history" },
 
-  // Shareable scan URL visited by a stranger, or a purged trash scan.
-  // Full-page (not toast-redirect — hiding information with an
-  // auto-navigate is worse UX).
-  SCAN_NOT_FOUND: {
-    surface: "full-page",
-    headline: "Scan not found",
-    body: "This scan doesn't exist or has been permanently deleted.",
-    primary: "go-home",
-  },
+  SCAN_NOT_FOUND: { surface: "full-page", primary: "go-home" },
 
-  // Soft asset failures — handled inline inside ResultPage sections.
-  HEATMAP_UNAVAILABLE: {
-    surface: "soft-asset",
-    headline: "Heatmap unavailable",
-    body: "The verdict is still accurate. The visual breakdown couldn't be generated for this image.",
-  },
-  ANALYSIS_UNAVAILABLE: {
-    surface: "soft-asset",
-    headline: "Detailed analysis unavailable",
-    body: "Detailed analysis unavailable for this image.",
-  },
-  PREVIEW_UNAVAILABLE: {
-    surface: "soft-asset",
-    headline: "Preview unavailable",
-    body: "The scan is still available — just without a preview thumbnail.",
-  },
+  HEATMAP_UNAVAILABLE: { surface: "soft-asset" },
+  ANALYSIS_UNAVAILABLE: { surface: "soft-asset" },
+  PREVIEW_UNAVAILABLE: { surface: "soft-asset" },
 
-  // Cookie verify failed — Worker silently reissues; frontend never sees it.
-  SESSION_INVALID: {
-    surface: "silent",
-    headline: "",
-    body: "",
-  },
+  SESSION_INVALID: { surface: "silent" },
 
-  // Site-wide banners.
-  UPSTREAM_DOWN: {
-    surface: "site-banner",
-    headline: "Scanning is temporarily unavailable",
-    body: "The detection service is temporarily unavailable. You can still view your history.",
-  },
-  RATE_LIMITED: {
-    // Cloudflare edge or Worker throttle. Amber banner, auto-dismisses
-    // 30s after the last 429 event; doesn't block navigation.
-    surface: "site-banner",
-    headline: "Slow down for a moment",
-    body: "Too many requests. Please wait a moment before trying again.",
-  },
+  UPSTREAM_DOWN: { surface: "site-banner" },
+  RATE_LIMITED: { surface: "site-banner" },
 
-  // Client sent something the server couldn't parse — client-broken,
-  // not user-fixable. Full-page generic with Refresh.
-  INVALID_REQUEST: {
-    surface: "full-page",
-    headline: "Something went wrong",
-    body: "Please refresh the page and try again.",
-    primary: "refresh",
-  },
-  INTERNAL_ERROR: {
-    surface: "full-page",
-    headline: "Something went wrong",
-    body: "Please refresh and try again. If this keeps happening, try again later.",
-    primary: "refresh",
-    secondary: "go-home",
-  },
+  INVALID_REQUEST: { surface: "full-page", primary: "refresh" },
+  INTERNAL_ERROR: { surface: "full-page", primary: "refresh", secondary: "go-home" },
 };
+
+export type ErrorUx = ErrorUxConfig & {
+  /** Default headline; server message is shown below (or replaces body). */
+  headline: string;
+  /** Default body copy when no server message is available. */
+  body: string;
+};
+
+/**
+ * Read the current localized copy for an error code. Re-computed on each
+ * access so a language change re-renders naturally (components call this
+ * during render). The translate function is imported from the shared i18n
+ * instance rather than injected, so this module stays callable outside a
+ * React tree (e.g. from the AppShell site-banner read-through).
+ */
+function uxFor(code: ErrorCode): ErrorUx {
+  const cfg = ERROR_UX_CONFIG[code];
+  return {
+    ...cfg,
+    headline: i18n.t(`errors.${code}.headline`),
+    body: i18n.t(`errors.${code}.body`),
+  };
+}
+
+/**
+ * Proxy that looks like the old ERROR_UX constant object but resolves
+ * each entry against the current language at access time. Keeps the old
+ * call-site shape working (`ERROR_UX.RATE_LIMITED.body`) while making
+ * the copy reactive to locale changes.
+ */
+export const ERROR_UX: Record<ErrorCode, ErrorUx> = new Proxy(
+  {} as Record<ErrorCode, ErrorUx>,
+  {
+    get(_target, prop: string) {
+      return uxFor(prop as ErrorCode);
+    },
+  },
+);
 
 /**
  * Resolve the user-facing copy for an error, preferring the server's
@@ -216,7 +143,7 @@ export function resolveErrorCopy(
   secondary?: ErrorAction;
   surface: ErrorSurface;
 } {
-  const ux = ERROR_UX[code];
+  const ux = uxFor(code);
   return {
     surface: ux.surface,
     headline: ux.headline,
@@ -232,15 +159,27 @@ export function resolveErrorCopy(
  * Used by consumers that render both through the same screen slot.
  */
 export function isRedFullPage(code: ErrorCode): boolean {
-  return ERROR_UX[code].surface === "full-page";
+  return ERROR_UX_CONFIG[code].surface === "full-page";
 }
 
-/** Concrete label for each abstract ErrorAction token. */
-export const ACTION_LABEL: Record<ErrorAction, string> = {
-  retry: "Retry",
-  "go-back": "Go back",
-  "go-home": "Go to home",
-  refresh: "Refresh",
-  "scan-another": "Scan another image",
-  "see-history": "View history",
-};
+/**
+ * Concrete localized label for an abstract ErrorAction token. Callers
+ * use this during render so the label tracks the active language.
+ */
+export function actionLabel(action: ErrorAction): string {
+  return i18n.t(`errorActions.${action}`);
+}
+
+/**
+ * Proxy-backed map that looks like the old ACTION_LABEL constant while
+ * resolving each lookup against the current language. Preserves the old
+ * call-site shape (`ACTION_LABEL.retry`) for drop-in compatibility.
+ */
+export const ACTION_LABEL: Record<ErrorAction, string> = new Proxy(
+  {} as Record<ErrorAction, string>,
+  {
+    get(_target, prop: string) {
+      return i18n.t(`errorActions.${prop}`);
+    },
+  },
+);

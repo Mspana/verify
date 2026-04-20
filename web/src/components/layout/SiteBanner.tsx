@@ -1,5 +1,6 @@
 import { AlertTriangle, X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 // Top-of-app banner for system-level conditions:
 //   variant="red"   — UPSTREAM_DOWN: detector offline, user literally
@@ -33,6 +34,7 @@ const STYLES: Record<Variant, { bg: string; text: string; border: string }> = {
 
 export function SiteBanner({ variant, children, onDismiss }: Props) {
   const s = STYLES[variant];
+  const { t } = useTranslation();
   return (
     <div
       role="status"
@@ -50,7 +52,7 @@ export function SiteBanner({ variant, children, onDismiss }: Props) {
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t("common.dismiss")}
           className="-my-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded opacity-70 hover:opacity-100"
         >
           <X className="h-4 w-4" strokeWidth={1.5} aria-hidden />

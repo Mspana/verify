@@ -1,6 +1,7 @@
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { Preview } from "@verify/shared";
 
 import { ErrorPage } from "../components/error/ErrorPage";
@@ -15,14 +16,8 @@ import { ResultPage } from "./ResultPage";
 //   - complete → ResultPage (fully populated)
 //   - error    → inline error panel (step 7 promotes full-page errors
 //                to the dedicated ErrorPage per ERRORS.md)
-//
-// SCAN_NOT_FOUND and SCAN_TIMEOUT surface via hook.error and are
-// terminal; retry affordance lands in step 7.
 
-/** Nav-state payload passed from HomePage → ScanningPage. The blob URL
- *  is created in HomePage right before navigate() so we can render the
- *  user's own image immediately, instead of waiting for the proxied
- *  preview from TruthScan. Absent after a page refresh. */
+/** Nav-state payload passed from HomePage → ScanningPage. */
 export type ScanningNavState = {
   blobUrl?: string;
 };
@@ -33,13 +28,6 @@ export function ScanningPage() {
   const scanId = id ?? "";
   const { scan, error } = useScan(scanId);
 
-  // Capture the blob URL once on mount so it survives re-renders (and
-  // any router state-clearing). DELIBERATELY no useEffect cleanup that
-  // revokes — React 18 strict mode fires effect cleanups on the dev
-  // double-mount, which would kill the URL before the <img> can use
-  // it. The leak is bounded (one blob per scan started in a session,
-  // typically a few MB at most) and the browser revokes everything on
-  // tab close. Fine for MVP.
   const navState = (location.state ?? null) as ScanningNavState | null;
   const [uploadedBlobUrl] = useState<string | undefined>(() => navState?.blobUrl);
 
@@ -59,11 +47,6 @@ export function ScanningPage() {
   return <ResultPage scan={scan} />;
 }
 
-// Shared error-page rendering for ScanningPage. Resolves abstract
-// action tokens (retry / go-back / go-home / scan-another / refresh /
-// see-history) to concrete labels + handlers. Retry/go-back/go-home/
-// scan-another all navigate to / since we don't hold the uploaded File
-// in scope here — the user picks again from home.
 function ScanErrorPage({
   code,
   serverMessage,
@@ -124,28 +107,29 @@ function ScanningState({
   blobUrl?: string;
 }) {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage ?? i18n.language;
+  const isZh = lang === "zh-CN";
   return (
     <div className="flex flex-col md:mx-auto md:max-w-[640px] md:px-10 md:py-10">
-      {/* Mobile back-row — desktop uses the sidebar for nav, no back row. */}
       <div className="flex items-center gap-2.5 px-5 py-3.5 md:hidden">
         <button
           type="button"
           onClick={() => navigate("/")}
           className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px] bg-paper-alt text-ink"
-          aria-label="Back"
+          aria-label={t("common.back")}
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
         </button>
-        <h2 className="text-[15px] font-medium">Scanning</h2>
+        <h2 className="text-[15px] font-medium">{t("scanning.eyebrow")}</h2>
       </div>
 
-      {/* Desktop eyebrow + title. */}
       <div className="hidden md:block">
         <p className="mb-1.5 text-[11px] uppercase tracking-[0.3px] text-ink/55">
-          Scanning
+          {t("scanning.eyebrow")}
         </p>
         <h1 className="mb-6 text-[26px] font-medium leading-[1.2]">
-          Analyzing image
+          {t("scanning.title")}
           <AnimatedDots />
         </h1>
       </div>
@@ -153,13 +137,19 @@ function ScanningState({
       <div className="px-5 pb-6 md:px-0">
         <ScanImage preview={preview} blobUrl={blobUrl} />
 
-        {/* Mobile analyzing text — desktop puts it above the image. */}
         <div className="mt-5 text-center md:hidden">
           <h2 className="text-[17px] font-medium leading-tight">
-            Analyzing image
+            {t("scanning.title")}
             <AnimatedDots />
           </h2>
-          <p className="mt-1 text-[13px] text-ink/55">正在分析图片</p>
+          {/* Bilingual echo on mobile only when English is active — when
+              Chinese is active, the main title is already in Chinese and
+              the echo would just duplicate it. */}
+          {!isZh && (
+            <p className="mt-1 text-[13px] text-ink/55">
+              {t("scanning.chineseSubtitle")}
+            </p>
+          )}
         </div>
 
         <StepsList />
@@ -175,15 +165,6 @@ function ScanImage({
   preview?: Preview;
   blobUrl?: string;
 }) {
-  // Source priority:
-  //   1. blobUrl  — the local image, available instantly, before
-  //      TruthScan returns anything. This is the typical case during
-  //      polling.
-  //   2. preview.url — the proxied preview from the Worker once it's
-  //      ready. Falls back here if the user refreshed mid-scan and
-  //      lost the blob URL from nav state.
-  //   3. neither  — render the gradient placeholder so the sweep
-  //      still has something to overlay.
   const src =
     blobUrl ?? (preview?.status === "ready" ? preview.url : undefined);
 
@@ -196,13 +177,6 @@ function ScanImage({
     );
   }
 
-  // Image drives the container's size — the sweep and corner brackets
-  // are absolute children sized to the image's actual rendered box.
-  // `w-fit` shrinks the parent to the image's intrinsic width (capped
-  // by max-w-* on the image itself), so we don't crop or letterbox.
-  // Mobile cap: max-h-[70vh] keeps a tall portrait from pushing the
-  // analyzing copy and steps list below the fold. Desktop cap:
-  // max-w-[540px] aligns with the result-page image area width.
   return (
     <div className="relative mx-auto w-fit max-w-full">
       <img
@@ -259,27 +233,23 @@ function CornerBracket({ className, d }: { className: string; d: string }) {
   );
 }
 
-// Progressive steps list. Backend doesn't expose staged progress
-// today — these are aspirational during polling and all four states
-// are derivable from the hook's knowledge: we're here because submit
-// succeeded (first two done), verdict is still pending (third active),
-// heatmap waits for verdict (fourth pending).
 type StepState = "done" | "active" | "pending";
-type Step = { label: string; state: StepState };
+type Step = { labelKey: string; state: StepState };
 
 const STEPS: Step[] = [
-  { label: "Uploaded", state: "done" },
-  { label: "Preprocessing", state: "done" },
-  { label: "Detecting AI patterns", state: "active" },
-  { label: "Generating heatmap", state: "pending" },
+  { labelKey: "scanning.steps.uploaded", state: "done" },
+  { labelKey: "scanning.steps.preprocessing", state: "done" },
+  { labelKey: "scanning.steps.detecting", state: "active" },
+  { labelKey: "scanning.steps.heatmap", state: "pending" },
 ];
 
 function StepsList() {
+  const { t } = useTranslation();
   return (
     <div className="mt-5 flex flex-col gap-[11px] rounded-[11px] border border-border bg-white px-4 py-3.5">
       {STEPS.map((s) => (
         <div
-          key={s.label}
+          key={s.labelKey}
           className={[
             "flex items-center gap-[11px] text-[13px]",
             s.state === "pending"
@@ -291,7 +261,7 @@ function StepsList() {
         >
           <StepMarker state={s.state} />
           <span className={s.state === "active" ? "font-medium" : ""}>
-            {s.label}
+            {t(s.labelKey)}
           </span>
         </div>
       ))}

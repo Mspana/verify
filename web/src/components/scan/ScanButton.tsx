@@ -1,16 +1,14 @@
 import { Loader2, Scan as ScanIcon } from "lucide-react";
 
-// Primary bilingual CTA. Mobile: full-width with the corner-bracket
-// Scan icon left of the label. Desktop: no icon, stretches to fill
-// the upload-row grid cell (per 01-home.html upload-row layout).
+// Primary bilingual CTA. "扫描 · Scan" stays bilingual in both locales
+// — treated like the brand, part of the visual system. Mobile: full-
+// width with the corner-bracket Scan icon left of the label. Desktop:
+// no icon, stretches to fill the upload-row grid cell.
 //
 // Three "can't click" states, each with different semantics:
-//   - disabled (no file selected / loading): HTML `disabled`. Standard
-//     greyed-out; tab-skippable. Screen reader announces "disabled."
+//   - disabled (no file selected / loading): HTML `disabled`.
 //   - unavailable (UPSTREAM_DOWN): aria-disabled="true" — stays in tab
-//     order and focusable so screen readers can read the tooltip /
-//     explanation. onClick is suppressed via the handler, not the
-//     browser. The user can see *why* they can't scan right now.
+//     order and focusable so screen readers can read the tooltip.
 
 type Props = {
   onClick: () => void;
@@ -55,8 +53,6 @@ export function ScanButton({
           "rounded-card bg-cobalt text-paper text-[14px] font-medium tracking-[0.2px]",
           "py-3.5 px-4 transition-colors hover:bg-cobalt/90",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          // Mirror the visual disabled styling when unavailable, since
-          // HTML `disabled` isn't set — CSS :disabled won't apply.
           unavailable ? "opacity-50 cursor-not-allowed hover:bg-cobalt" : "",
         ].join(" ")}
       >

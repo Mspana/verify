@@ -1,5 +1,6 @@
 import { ImageOff } from "lucide-react";
 import { useEffect, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Heatmap, Preview } from "@verify/shared";
 
 import { Skeleton } from "../ui/Skeleton";
@@ -7,19 +8,8 @@ import { Tabs } from "../ui/Tab";
 
 // Image + heatmap control.
 //
-//   [ Original ][ Heatmap ]    ← segmented tab-switcher (ARIA tablist)
-//   ┌─────────────────────┐
-//   │       image         │   ← tabpanel: one DOM element; content
-//   └─────────────────────┘     swaps between Original preview and
-//   Red areas show …             Heatmap composite / placeholder.
-//                                Caption only appears on the Heatmap
-//                                tab — it explains what the colors
-//                                mean and is meaningless on Original.
-//
 // Heatmap tab states:
 //   ready + transparent → composite preview + heatmap at 75% opacity
-//                         (fixed; no slider — the value wasn't earning
-//                         its vertical real estate)
 //   ready + overlayed   → heatmap alone (future flag path)
 //   pending             → skeleton (wait for polling to resolve)
 //   skipped / failed    → preview rendered grayscale with a paper/90
@@ -28,9 +18,7 @@ import { Tabs } from "../ui/Tab";
 // Keyboard:
 //   - Arrow / Home / End traverse tabs (W3C pattern, handled by Tabs).
 //   - 'H' toggles Original ↔ Heatmap globally while this component is
-//     mounted. Undocumented power-user shortcut; no UI hint. Guarded
-//     against firing inside form inputs and against modifier-key
-//     combos so browser shortcuts and text typing still work.
+//     mounted. Undocumented power-user shortcut; no UI hint.
 
 type TabId = "original" | "heatmap";
 
@@ -44,24 +32,18 @@ type Props = {
 const HEATMAP_OPACITY = 0.75;
 
 export function HeatmapTab({ preview, heatmap }: Props) {
+  const { t } = useTranslation();
   const [active, setActive] = useState<TabId>("original");
 
-  // Stable ids for ARIA wiring. One panelId shared by both tabs (the
-  // panel swaps contents rather than toggling visibility), per W3C:
-  // aria-labelledby on the panel points to the currently-active tab.
   const idPrefix = useId();
   const panelId = `${idPrefix}panel`;
   const originalTabId = `${idPrefix}tab-original`;
   const heatmapTabId = `${idPrefix}tab-heatmap`;
   const activeTabId = active === "original" ? originalTabId : heatmapTabId;
 
-  // 'H' shortcut: scoped by this effect's lifetime. When HeatmapTab
-  // unmounts (user navigates away from a result), the listener goes
-  // with it — no global leak.
   useEffect(() => {
     const handle = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      // Don't eat the keystroke while the user is typing.
       const target = e.target;
       if (
         target instanceof HTMLInputElement ||
@@ -90,19 +72,6 @@ export function HeatmapTab({ preview, heatmap }: Props) {
           heatmap={heatmap}
           showHeatmap={active === "heatmap"}
         />
-        {/*
-          Caption is always rendered so its layout footprint is
-          reserved on both tabs — toggling visibility (rather than
-          mount/unmount) prevents everything below (reasoning, recs,
-          signals) from jumping when the user flips between Original
-          and Heatmap. `visibility: hidden` preserves the box but
-          hides pixels; `aria-hidden` silences screen readers when
-          the caption isn't explaining what's on screen.
-          If the text ever wraps to two lines at a narrow viewport,
-          this still works correctly — the hidden element renders at
-          its true rendered height, so reserved space matches the
-          visible state exactly.
-        */}
         <p
           className="mt-2 text-[10px] text-ink/55"
           style={{
@@ -110,7 +79,7 @@ export function HeatmapTab({ preview, heatmap }: Props) {
           }}
           aria-hidden={active !== "heatmap"}
         >
-          Red areas show where the detector found AI patterns.
+          {t("result.heatmapCaption")}
         </p>
       </div>
 
@@ -119,20 +88,20 @@ export function HeatmapTab({ preview, heatmap }: Props) {
           tabs={[
             {
               id: "original",
-              label: "Original",
+              label: t("result.originalTab"),
               tabId: originalTabId,
               panelId,
             },
             {
               id: "heatmap",
-              label: "Heatmap",
+              label: t("result.heatmapTab"),
               tabId: heatmapTabId,
               panelId,
             },
           ] as const}
           active={active}
           onChange={(id: TabId) => setActive(id)}
-          ariaLabel="Image view"
+          ariaLabel={t("result.imageView")}
         />
       </div>
     </div>
@@ -155,21 +124,22 @@ function ImageFrame({
 }
 
 function PreviewImage({ preview }: { preview: Preview }) {
+  const { t } = useTranslation();
   if (preview.status === "pending") {
     return <Skeleton className="aspect-[4/3] w-full rounded-card" />;
   }
   if (preview.status === "failed") {
     return (
       <PlaceholderTile
-        text="Preview unavailable"
-        subtext="The scan is still available — we just couldn't load the thumbnail."
+        text={t("result.previewUnavailable")}
+        subtext={t("result.previewUnavailableSub")}
       />
     );
   }
   return (
     <img
       src={preview.url}
-      alt="Uploaded image"
+      alt=""
       className="block w-full rounded-card bg-paper-alt"
     />
   );
@@ -182,6 +152,7 @@ function HeatmapView({
   preview: Preview;
   heatmap: Heatmap;
 }) {
+  const { t } = useTranslation();
   if (heatmap.status === "pending") {
     return <Skeleton className="aspect-[4/3] w-full rounded-card" />;
   }
@@ -189,8 +160,8 @@ function HeatmapView({
     return (
       <UnavailableOverPreview
         preview={preview}
-        headline="Heatmap not available for this image"
-        body="TruthScan doesn't generate one when the verdict is clear. The verdict is still accurate."
+        headline={t("result.heatmapSkippedHeadline")}
+        body={t("result.heatmapSkippedBody")}
       />
     );
   }
@@ -198,8 +169,8 @@ function HeatmapView({
     return (
       <UnavailableOverPreview
         preview={preview}
-        headline="Heatmap unavailable"
-        body="The verdict is still accurate. The visual breakdown couldn't be generated for this image."
+        headline={t("result.heatmapUnavailable")}
+        body={t("result.heatmapUnavailableBody")}
       />
     );
   }
@@ -221,12 +192,12 @@ function HeatmapView({
     <div className="relative">
       <img
         src={previewReady ? preview.url : ""}
-        alt="Uploaded image"
+        alt=""
         className="block w-full rounded-card bg-paper-alt"
       />
       <img
         src={heatmap.url}
-        alt="Heatmap overlay"
+        alt=""
         style={{ opacity: HEATMAP_OPACITY }}
         className="pointer-events-none absolute inset-0 h-full w-full rounded-card"
       />
@@ -234,12 +205,6 @@ function HeatmapView({
   );
 }
 
-/**
- * Grayscale-desaturated preview with a readable message pill centered
- * on top. Used for heatmap.status === "skipped" | "failed" whenever we
- * have a preview image to show. If we don't, fall back to the plain
- * placeholder tile so we don't render a broken <img>.
- */
 function UnavailableOverPreview({
   preview,
   headline,

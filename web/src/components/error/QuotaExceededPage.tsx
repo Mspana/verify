@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { QuotaResponse } from "@verify/shared";
 
 import { ACTION_LABEL } from "../../lib/errors";
@@ -9,11 +10,6 @@ import { ErrorPage } from "./ErrorPage";
 // Amber full-page variant of ErrorPage for QUOTA_EXCEEDED. Not a
 // failure — a product limit — so the palette reads as "be patient"
 // rather than "broken."
-//
-// Countdown ticks once per minute. When it hits the "shortly" floor
-// we stop ticking rather than auto-refresh: the server's midnight
-// Beijing reset may be ±seconds off the client clock, and an
-// auto-refresh would be a subtle race. Users can retry manually.
 
 type Props = {
   quota: QuotaResponse;
@@ -21,6 +17,7 @@ type Props = {
 
 export function QuotaExceededPage({ quota }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -33,12 +30,8 @@ export function QuotaExceededPage({ quota }: Props) {
   return (
     <ErrorPage
       variant="amber"
-      title="Daily scan limit reached"
-      body={
-        <>
-          You've used all {quota.limit} scans for today.
-        </>
-      }
+      title={t("quota.title")}
+      body={<>{t("quota.usedAll", { limit: quota.limit })}</>}
       extra={
         <p className="text-[12px] font-medium text-uncertain-ink">
           {countdown}

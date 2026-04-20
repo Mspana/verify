@@ -1,16 +1,8 @@
+import { useTranslation } from "react-i18next";
 import type { AgreementStrength } from "@verify/shared";
 
 // Agreement strength row, per 03-result-detail-ai.html .agreement-row
 // and the .warn variant in 05-pending-and-disagreement.html.
-// White card; 4 bar pips on the right; label + value stacked on the left.
-// Disagreement uses an uncertain-accent border + uncertain-ink value.
-
-const COPY: Record<AgreementStrength, string> = {
-  strong: "Strong",
-  moderate: "Moderate",
-  weak: "Weak",
-  disagreement: "Disagreement",
-};
 
 const BARS_FILLED: Record<AgreementStrength, number> = {
   strong: 3,
@@ -19,11 +11,19 @@ const BARS_FILLED: Record<AgreementStrength, number> = {
   disagreement: 1,
 };
 
+const COPY_KEY: Record<AgreementStrength, string> = {
+  strong: "verdict.agreement.strong",
+  moderate: "verdict.agreement.moderate",
+  weak: "verdict.agreement.weak",
+  disagreement: "verdict.agreement.disagreement",
+};
+
 type Props = {
   agreement: AgreementStrength;
 };
 
 export function AgreementRow({ agreement }: Props) {
+  const { t } = useTranslation();
   const isDisagreement = agreement === "disagreement";
   const filled = BARS_FILLED[agreement];
   const fillColor = isDisagreement ? "bg-uncertain-accent" : "bg-ai-accent";
@@ -36,7 +36,7 @@ export function AgreementRow({ agreement }: Props) {
     >
       <div className="min-w-0">
         <p className="mb-0.5 text-[11px] tracking-[0.2px] text-ink/55 uppercase">
-          Detector agreement
+          {t("verdict.agreement.heading")}
         </p>
         <p
           className={[
@@ -44,7 +44,7 @@ export function AgreementRow({ agreement }: Props) {
             isDisagreement ? "text-uncertain-ink" : "text-ink",
           ].join(" ")}
         >
-          {COPY[agreement]}
+          {t(COPY_KEY[agreement])}
         </p>
       </div>
       <div aria-hidden className="flex gap-[3px]">

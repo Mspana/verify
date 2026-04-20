@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { ErrorCode, QuotaResponse, Scan } from "@verify/shared";
 
 import { ApiError, getQuota, getScans } from "../lib/api";
@@ -39,6 +40,7 @@ type UploadState =
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const health = useHealth();
   const [file, setFile] = useState<File | null>(null);
   const [upload, setUpload] = useState<UploadState>({ kind: "idle" });
@@ -49,15 +51,12 @@ export function HomePage() {
     let cancelled = false;
     getScans({ limit: 20 })
       .then((res) => !cancelled && setScans(res.scans))
-      .catch(() => !cancelled && setScansError("Couldn't load your scan history."));
+      .catch(() => !cancelled && setScansError(t("home.couldntLoad")));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
-  // When the quota screen shows, fetch quota so we can render the
-  // countdown. Firing once on entry to the quota state is enough; the
-  // screen ticks its own minute-by-minute timer off the fetched resetsAt.
   useEffect(() => {
     if (upload.kind !== "quota-exceeded" || upload.quota !== null) return;
     let cancelled = false;
@@ -67,8 +66,6 @@ export function HomePage() {
         setUpload({ kind: "quota-exceeded", quota: q });
       })
       .catch(() => {
-        // Fallback: render the screen without a precise countdown. Better
-        // than trapping the user in a spinner because of a quota GET.
         if (cancelled) return;
         setUpload({
           kind: "quota-exceeded",
@@ -93,8 +90,8 @@ export function HomePage() {
         setUpload({
           kind: "inline-error",
           code: "INTERNAL_ERROR",
-          headline: "Something went wrong",
-          message: "Please try again.",
+          headline: t("home.genericError.headline"),
+          message: t("home.genericError.body"),
         });
         return;
       }
@@ -105,9 +102,6 @@ export function HomePage() {
       } else if (ux.surface === "full-page") {
         setUpload({ kind: "full-page-error", code: e.code });
       } else {
-        // inline by default — covers FILE_TOO_LARGE, FILE_TOO_SMALL,
-        // UNSUPPORTED_TYPE, FILENAME_INVALID, and anything else that
-        // lands on surface=inline.
         setUpload({
           kind: "inline-error",
           code: e.code,
@@ -119,14 +113,9 @@ export function HomePage() {
   };
 
   const resetAfterError = () => {
-    // Single reset used by every error recovery button that "just takes
-    // the user back to the upload form" — equivalent to the upload-
-    // rejected Try again / Cancel pair in the mockup.
     setFile(null);
     setUpload({ kind: "idle" });
   };
-
-  // === Full-page states: render nothing else. ===
 
   if (upload.kind === "full-page-error") {
     const copy = resolveErrorCopy(upload.code);
@@ -163,16 +152,14 @@ export function HomePage() {
     return <QuotaExceededPage quota={upload.quota} />;
   }
 
-  // === Normal layout (idle / running / inline-error). ===
-
   return (
     <div className="mx-auto max-w-[840px] px-5 pt-2 pb-3.5 md:px-10 md:py-8">
       <header className="mb-[14px] md:mb-[18px]">
         <p className="mb-1.5 text-[11px] uppercase tracking-[0.3px] text-ink/55">
-          AI detection
+          {t("home.eyebrow")}
         </p>
         <h1 className="text-[20px] font-medium leading-[1.2] md:text-[24px]">
-          Check for AI
+          {t("home.title")}
         </h1>
       </header>
 
@@ -187,20 +174,19 @@ export function HomePage() {
               onClick={resetAfterError}
               className="rounded-btn bg-cobalt px-4 py-2 text-[12px] font-medium text-paper hover:bg-cobalt/90"
             >
-              Try again
+              {t("common.tryAgain")}
             </button>
             <button
               type="button"
               onClick={resetAfterError}
               className="rounded-btn border border-border bg-transparent px-4 py-2 text-[12px] font-medium text-ink hover:bg-paper-alt"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         </div>
       )}
 
-      {/* Mobile: stacked. Desktop: upload + CTA side-by-side (1fr 180px). */}
       <div className="md:grid md:grid-cols-[1fr_180px] md:gap-[14px] md:mb-8">
         <UploadArea
           onFile={(f) => {
@@ -216,7 +202,7 @@ export function HomePage() {
             disabled={!file}
             loading={upload.kind === "running"}
             unavailable={!health.healthy}
-            unavailableReason="Detection is temporarily offline."
+            unavailableReason={t("upload.detectionOffline")}
           />
         </div>
       </div>
@@ -227,25 +213,25 @@ export function HomePage() {
             id="history-heading"
             className="text-[13px] font-medium md:text-[14px]"
           >
-            Recent scans
+            {t("home.recentScans")}
           </h2>
           {scans && scans.length > 0 && (
             <a
               href="/history"
               className="text-[12px] text-cobalt hover:underline"
             >
-              See all
+              {t("common.seeAll")}
             </a>
           )}
         </div>
         {scansError && <Banner kind="info">{scansError}</Banner>}
         {!scansError && scans === null && (
-          <div className="text-sm text-ink/55">Loading…</div>
+          <div className="text-sm text-ink/55">{t("common.loading")}</div>
         )}
         {!scansError && scans?.length === 0 && (
           <EmptyState
-            title="No scans yet"
-            body="Your first scan will show up here."
+            title={t("home.noScansTitle")}
+            body={t("home.noScansBody")}
           />
         )}
         {!scansError && scans && scans.length > 0 && (

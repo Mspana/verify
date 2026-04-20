@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "../ui/Button";
 
@@ -11,11 +12,6 @@ import { Button } from "../ui/Button";
 // Two variants, deliberately binary:
 //   red   — something failed (SCAN_FAILED, UPLOAD_FAILED, INTERNAL_ERROR, …)
 //   amber — a soft limit, not a failure (QUOTA_EXCEEDED)
-//
-// Rendered inside AppShell's main content area so the sidebar / nav
-// stay usable — we don't take over the viewport. Every page that
-// shows an ErrorPage is expected to provide at least a primary or
-// secondary action; users should never be stranded without a next step.
 
 type Variant = "red" | "amber";
 
@@ -51,6 +47,7 @@ export function ErrorPage({
   code,
   extra,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="mx-auto max-w-[480px] px-5 py-12 md:py-16">
       <div className="rounded-card border border-border bg-white p-6 md:p-8">
@@ -102,7 +99,7 @@ export function ErrorPage({
         {code && (
           <div className="mt-5 border-t border-border pt-3 text-center">
             <p className="text-[11px] text-ink/55">
-              Error code:{" "}
+              {t("errorPage.errorCode")}{" "}
               <code className="font-mono text-ink/75">{code}</code>
             </p>
           </div>

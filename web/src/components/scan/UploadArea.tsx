@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 // Drag-and-drop + tap-to-select upload target matching 01-home.html
 // upload-area / upload-area-d. Bg is true white (distinct from the
@@ -17,6 +18,7 @@ const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
 export function UploadArea({ onFile, disabled, selectedFile }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const { t } = useTranslation();
 
   const open = () => {
     if (disabled) return;
@@ -51,7 +53,7 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
     <div
       role="button"
       tabIndex={disabled ? -1 : 0}
-      aria-label="Upload an image to scan"
+      aria-label={t("upload.ariaLabel")}
       aria-disabled={disabled}
       onClick={open}
       onKeyDown={onKeyDown}
@@ -79,19 +81,19 @@ export function UploadArea({ onFile, disabled, selectedFile }: Props) {
             {selectedFile.name}
           </div>
           <div className="mt-0.5 text-[11px] text-ink/55">
-            Tap to choose a different image
+            {t("upload.tapToChange")}
           </div>
         </>
       ) : (
         <>
           <div className="mt-2.5 text-[13px] font-medium">
-            <span className="md:hidden">Tap to upload</span>
+            <span className="md:hidden">{t("upload.tapToUpload")}</span>
             <span className="hidden md:inline">
-              Drag an image or click to upload
+              {t("upload.dragOrClick")}
             </span>
           </div>
           <div className="mt-0.5 text-[11px] text-ink/55">
-            JPG, PNG, HEIC — up to 10 MB
+            {t("upload.hint")}
           </div>
         </>
       )}

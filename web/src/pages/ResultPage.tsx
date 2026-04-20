@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Scan, VerdictLabel } from "@verify/shared";
 
 import { formatRelative } from "../lib/format";
@@ -14,17 +15,13 @@ import { Skeleton } from "../components/ui/Skeleton";
 // 04-verdict-variants.html (three variants), and
 // 05-pending-and-disagreement.html (partial-pending skeletons +
 // disagreement banner above verdict).
-//
-// Mobile: single column, verdict first.
-// Desktop: 2-col grid (1.15fr / 1fr) with image+heatmap on the left
-// and verdict+agreement+indicators on the right; reasoning and
-// recommendations span full width below.
 
 type Props = {
   scan: Scan;
 };
 
 export function ResultPage({ scan }: Props) {
+  const { t } = useTranslation();
   const showDisagreement =
     scan.analysis.status === "ready" &&
     scan.analysis.agreement === "disagreement";
@@ -36,24 +33,19 @@ export function ResultPage({ scan }: Props) {
     <div className="mx-auto max-w-[1000px] px-5 pt-3 pb-6 md:px-10 md:pt-6 md:pb-10">
       <header className="mb-4">
         <p className="text-[11px] uppercase tracking-[0.3px] text-ink/55">
-          Result
+          {t("result.eyebrow")}
         </p>
         <h1 className="mt-1 text-[20px] font-medium leading-[1.2] md:text-[22px]">
           {scan.filename}
         </h1>
         <p className="mt-0.5 text-[11px] text-ink/55">
-          Scanned {formatRelative(scan.createdAt)}
+          {t("result.scanned", { time: formatRelative(scan.createdAt) })}
         </p>
       </header>
 
-      {/* Disagreement banner sits above the verdict per the brief:
-       *   uncertain-fill + uncertain-accent border + warning triangle.
-       *   Copy is hardcoded per the mockup. */}
       {showDisagreement && <DisagreementBanner />}
 
-      {/* Main 2-col grid on desktop; stacked on mobile. */}
       <div className="grid gap-4 md:grid-cols-[1.15fr_1fr] md:gap-[22px]">
-        {/* LEFT: image + heatmap controls + image tags */}
         <div className="flex flex-col gap-[14px] md:order-1">
           <HeatmapTab
             scanId={scan.id}
@@ -68,7 +60,7 @@ export function ResultPage({ scan }: Props) {
                   id="tags-heading"
                   className="mb-[7px] text-[11px] uppercase tracking-[0.2px] text-ink/55"
                 >
-                  Image tags
+                  {t("result.imageTags")}
                 </h2>
                 <ImageTags tags={scan.analysis.imageTags} />
               </section>
@@ -76,7 +68,7 @@ export function ResultPage({ scan }: Props) {
           {scan.analysis.status === "pending" && (
             <section>
               <p className="mb-[7px] text-[11px] uppercase tracking-[0.2px] text-ink/55">
-                Image tags
+                {t("result.imageTags")}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <Skeleton className="h-[22px] w-14 rounded-[12px]" />
@@ -88,12 +80,9 @@ export function ResultPage({ scan }: Props) {
           )}
         </div>
 
-        {/* RIGHT: verdict banner + (pending pill?) + agreement + indicators */}
         <div className="flex flex-col gap-[15px] md:order-2">
           <VerdictBanner verdict={scan.verdict} />
 
-          {/* Analysis-pill: shown only when the verdict is ready but
-           *  analysis is still loading (the partial → complete window). */}
           {scan.state === "partial" && scan.analysis.status === "pending" && (
             <AnalysisPending />
           )}
@@ -107,8 +96,8 @@ export function ResultPage({ scan }: Props) {
                   className="mb-[9px] text-[13px] font-medium"
                 >
                   {scan.analysis.agreement === "disagreement"
-                    ? "Conflicting signals"
-                    : "Key indicators"}
+                    ? t("result.conflictingSignals")
+                    : t("result.keyIndicators")}
                 </h2>
                 <KeyIndicators
                   items={scan.analysis.keyIndicators}
@@ -121,13 +110,12 @@ export function ResultPage({ scan }: Props) {
             <AnalysisSkeleton />
           ) : (
             <p className="text-sm text-ink/55">
-              Detailed analysis unavailable for this image.
+              {t("result.analysisUnavailable")}
             </p>
           )}
         </div>
       </div>
 
-      {/* Full-width: reasoning */}
       {scan.analysis.status === "ready" && scan.analysis.reasoning && (
         <section
           aria-labelledby="reasoning-heading"
@@ -137,7 +125,7 @@ export function ResultPage({ scan }: Props) {
             id="reasoning-heading"
             className="mb-[9px] text-[11px] uppercase tracking-[0.2px] text-ink/55"
           >
-            Reasoning
+            {t("result.reasoning")}
           </h2>
           <p className="whitespace-pre-line text-[13px] leading-[1.6] text-ink">
             {scan.analysis.reasoning}
@@ -147,7 +135,7 @@ export function ResultPage({ scan }: Props) {
       {scan.analysis.status === "pending" && (
         <div className="mt-4 rounded-[11px] border border-border bg-white px-[17px] py-[15px]">
           <p className="mb-[9px] text-[11px] uppercase tracking-[0.2px] text-ink/55">
-            Reasoning
+            {t("result.reasoning")}
           </p>
           <div className="flex flex-col gap-[7px]">
             <Skeleton className="h-[11px] w-full rounded" />
@@ -157,7 +145,6 @@ export function ResultPage({ scan }: Props) {
         </div>
       )}
 
-      {/* Full-width: recommendations */}
       {scan.analysis.status === "ready" &&
         scan.analysis.recommendations.length > 0 && (
           <section
@@ -168,7 +155,7 @@ export function ResultPage({ scan }: Props) {
               id="recommendations-heading"
               className="mb-[11px] text-[11px] uppercase tracking-[0.2px] text-ink/55"
             >
-              Recommended next steps
+              {t("result.recommendedNextSteps")}
             </h2>
             <ol className="flex flex-col gap-[9px]">
               {scan.analysis.recommendations.map((r, i) => (
@@ -186,13 +173,12 @@ export function ResultPage({ scan }: Props) {
           </section>
         )}
 
-      {/* Signals (not in mockup — kept for MVP; quiet styling). */}
       <section className="mt-4" aria-labelledby="signals-heading">
         <h2
           id="signals-heading"
           className="mb-2 text-[11px] font-medium uppercase tracking-[0.2px] text-ink/55"
         >
-          Signals
+          {t("result.signals")}
         </h2>
         <SignalsRow signals={scan.signals} />
       </section>
@@ -201,6 +187,7 @@ export function ResultPage({ scan }: Props) {
 }
 
 function DisagreementBanner() {
+  const { t } = useTranslation();
   return (
     <div
       role="alert"
@@ -213,11 +200,10 @@ function DisagreementBanner() {
       />
       <div>
         <p className="mb-0.5 text-[12px] font-medium">
-          Our detectors disagreed on this image
+          {t("result.disagreementHeadline")}
         </p>
         <p className="text-[11px] leading-[1.5] opacity-85">
-          Treat this verdict with extra caution. Individual detector signals
-          below tell the full story.
+          {t("result.disagreementBody")}
         </p>
       </div>
     </div>
@@ -225,6 +211,7 @@ function DisagreementBanner() {
 }
 
 function AnalysisPending() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-[9px] rounded-btn bg-paper-alt px-3 py-[9px]">
       <Loader2
@@ -232,21 +219,19 @@ function AnalysisPending() {
         strokeWidth={1.5}
         aria-hidden
       />
-      <p className="text-[11px] text-ink/75">
-        Running deeper analysis · usually 15–30s
-      </p>
+      <p className="text-[11px] text-ink/75">{t("result.runningDeeper")}</p>
     </div>
   );
 }
 
 function AnalysisSkeleton() {
+  const { t } = useTranslation();
   return (
     <>
-      {/* Agreement skeleton row */}
       <div className="flex items-center justify-between rounded-[10px] border border-border bg-white px-[14px] py-[11px]">
         <div>
           <p className="mb-0.5 text-[11px] uppercase tracking-[0.2px] text-ink/55">
-            Detector agreement
+            {t("verdict.agreement.heading")}
           </p>
           <Skeleton className="mt-0.5 h-[14px] w-[66px] rounded" />
         </div>
@@ -258,7 +243,7 @@ function AnalysisSkeleton() {
         </div>
       </div>
       <section>
-        <p className="mb-[9px] text-[13px] font-medium">Key indicators</p>
+        <p className="mb-[9px] text-[13px] font-medium">{t("result.keyIndicators")}</p>
         <ul className="flex flex-col gap-1.5">
           {["w-[72%]", "w-[58%]", "w-[84%]"].map((w) => (
             <li
