@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verify — Pending & disagreement</title>
+<style>
+  :root {
+    --paper: #FBFAF7;
+    --paper-alt: #F3F1EB;
+    --border: #D9D5C9;
+    --ink: #141414;
+    --cobalt: #1652F0;
+    --human-fill: #F7E8E3;
+    --human-accent: #B85446;
+    --human-ink: #7A2E23;
+    --uncertain-fill: #F6EBD6;
+    --uncertain-accent: #C08A3E;
+    --uncertain-ink: #7A5418;
+    --ai-fill: #E7EEDE;
+    --ai-accent: #6B8C4F;
+    --ai-ink: #3E5828;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #E8E4D6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+  }
+  .page-wrap {
+    padding: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .section-label {
+    font-size: 13px; color: #555;
+    letter-spacing: 0.3px;
+    margin: 0 0 12px;
+    font-weight: 500;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes rot {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #F3F1EB 0%, #E8E4D6 50%, #F3F1EB 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 4px;
+  }
+  .spinner {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid var(--cobalt);
+    border-top-color: transparent;
+    animation: rot 1s linear infinite;
+  }
+
+  .panel {
+    background: var(--paper);
+    border-radius: 13px;
+    border: 0.5px solid var(--border);
+    padding: 26px 30px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 22px;
+  }
+
+  .eyebrow {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.3px;
+    margin: 0 0 5px;
+  }
+  .filename {
+    font-size: 22px; font-weight: 500;
+    margin: 0 0 22px;
+    line-height: 1.2;
+  }
+
+  .image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #E8DFD0 0%, #D9C8A8 100%);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .image-wrap svg.bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .tab-switcher {
+    display: flex;
+    background: var(--paper-alt);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 13px;
+  }
+  .tab {
+    flex: 1; text-align: center;
+    padding: 7px;
+    font-size: 12px;
+    opacity: 0.55;
+  }
+  .tab.active {
+    background: var(--paper);
+    border-radius: 6px;
+    font-weight: 500;
+    opacity: 1;
+  }
+  .tab.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .tags-eyebrow {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.2px;
+    margin: 0 0 7px;
+  }
+  .tags-list {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+
+  .verdict {
+    border-radius: 13px;
+    padding: 17px 19px;
+    margin-bottom: 15px;
+  }
+  .verdict.ai { background: var(--ai-fill); color: var(--ai-ink); }
+  .verdict.uncertain { background: var(--uncertain-fill); color: var(--uncertain-ink); }
+
+  .v-eyebrow {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 9px;
+  }
+  .v-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+  }
+  .v-dot.ai { background: var(--ai-accent); }
+  .v-dot.uncertain { background: var(--uncertain-accent); }
+  .v-eyebrow p {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    margin: 0;
+  }
+  .v-headline {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    line-height: 1.2;
+  }
+  .v-sub {
+    font-size: 13px;
+    opacity: 0.8;
+    margin: 0 0 14px;
+  }
+  .conf-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 7px;
+  }
+  .conf-label { font-size: 11px; opacity: 0.8; margin: 0; }
+  .conf-value { font-size: 13px; font-weight: 500; margin: 0; }
+  .conf-bar {
+    height: 5px; border-radius: 3px; overflow: hidden;
+  }
+  .conf-bar.ai { background: rgba(107, 140, 79, 0.25); }
+  .conf-bar.uncertain { background: rgba(192, 138, 62, 0.25); }
+  .conf-fill { height: 100%; }
+  .conf-fill.ai { background: var(--ai-accent); }
+  .conf-fill.uncertain { background: var(--uncertain-accent); }
+
+  .analysis-pill {
+    background: var(--paper-alt);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .analysis-pill p {
+    font-size: 11px;
+    opacity: 0.75;
+    margin: 0;
+  }
+
+  .agreement-row {
+    background: #FFFFFF;
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .agreement-row.warn {
+    border-color: var(--uncertain-accent);
+  }
+  .agreement-meta p:first-child {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.2px;
+    margin: 0 0 2px;
+  }
+  .agreement-meta p:last-child {
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0;
+  }
+  .agreement-meta.warn p:last-child {
+    color: var(--uncertain-ink);
+  }
+  .agreement-bars {
+    display: flex; gap: 3px;
+  }
+  .bar {
+    width: 6px; height: 14px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  .bar.active-ai { background: var(--ai-accent); }
+  .bar.active-warn { background: var(--uncertain-accent); }
+
+  .indicators-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 9px;
+  }
+  .indicators {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .indicator {
+    background: #FFFFFF;
+    border: 0.5px solid var(--border);
+    border-left: 3px solid;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 13px;
+  }
+  .indicator.skel { border-left-color: var(--border); }
+  .indicator.ai { border-left-color: var(--ai-accent); }
+  .indicator.human-suggest { border-left-color: var(--human-accent); }
+  .indicator p {
+    font-size: 12px; margin: 0;
+  }
+  .indicator-head {
+    display: flex; align-items: center; gap: 7px;
+    margin-bottom: 2px;
+  }
+  .indicator-head p {
+    font-size: 11px; font-weight: 500;
+    margin: 0;
+  }
+  .indicator-head.ai p { color: var(--ai-ink); }
+  .indicator-head.human p { color: var(--human-ink); }
+  .indicator-body {
+    font-size: 12px;
+    margin: 0 0 0 17px;
+  }
+
+  .reasoning {
+    background: #FFFFFF;
+    border: 0.5px solid var(--border);
+    border-radius: 11px;
+    padding: 15px 17px;
+    margin-top: 16px;
+  }
+  .r-eyebrow {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.2px;
+    margin: 0 0 9px;
+  }
+
+  .disagreement-banner {
+    background: var(--uncertain-fill);
+    border: 0.5px solid var(--uncertain-accent);
+    border-radius: 11px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+  }
+  .disagreement-banner svg { flex-shrink: 0; margin-top: 1px; }
+  .disagreement-banner p.head {
+    font-size: 12px; font-weight: 500;
+    color: var(--uncertain-ink);
+    margin: 0 0 3px;
+  }
+  .disagreement-banner p.body {
+    font-size: 11px;
+    color: var(--uncertain-ink);
+    opacity: 0.85;
+    margin: 0;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- PENDING STATE -->
+  <div>
+    <p class="section-label">PENDING — CORE READY, ANALYSIS POLLING</p>
+    <div class="panel">
+      <p class="eyebrow">RESULT</p>
+      <h1 class="filename">portrait-outdoor.jpg</h1>
+
+      <div class="two-col">
+        <!-- LEFT: image + placeholder tags -->
+        <div>
+          <div class="image-wrap">
+            <svg class="bg" viewBox="0 0 100 75" preserveAspectRatio="none">
+              <circle cx="50" cy="30" r="12" fill="#F4D78A" opacity="0.85"/>
+              <ellipse cx="50" cy="50" rx="15" ry="22" fill="#8B7050" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="tab-switcher">
+            <div class="tab active">Original</div>
+            <div class="tab loading">
+              <div class="spinner" style="width: 10px; height: 10px; border-width: 1.2px;"></div>
+              Heatmap
+            </div>
+          </div>
+          <p class="tags-eyebrow">IMAGE TAGS</p>
+          <div class="tags-list">
+            <div class="skeleton" style="width: 56px; height: 22px; border-radius: 12px;"></div>
+            <div class="skeleton" style="width: 72px; height: 22px; border-radius: 12px;"></div>
+            <div class="skeleton" style="width: 62px; height: 22px; border-radius: 12px;"></div>
+            <div class="skeleton" style="width: 78px; height: 22px; border-radius: 12px;"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: verdict ready, rest loading -->
+        <div>
+          <div class="verdict ai">
+            <div class="v-eyebrow">
+              <span class="v-dot ai"></span>
+              <p>AI 生成 · AI</p>
+            </div>
+            <h2 class="v-headline">AI generated</h2>
+            <p class="v-sub">This image was likely made by AI.</p>
+            <div class="conf-row">
+              <p class="conf-label">AI likelihood</p>
+              <p class="conf-value">90.2%</p>
+            </div>
+            <div class="conf-bar ai">
+              <div class="conf-fill ai" style="width: 90%;"></div>
+            </div>
+          </div>
+
+          <div class="analysis-pill">
+            <div class="spinner"></div>
+            <p>Running deeper analysis · usually 15–30s</p>
+          </div>
+
+          <div class="agreement-row">
+            <div class="agreement-meta" style="flex: 1;">
+              <p>DETECTOR AGREEMENT</p>
+              <div class="skeleton" style="width: 66px; height: 14px; margin-top: 2px;"></div>
+            </div>
+            <div class="agreement-bars">
+              <div class="skeleton" style="width: 6px; height: 14px; border-radius: 2px;"></div>
+              <div class="skeleton" style="width: 6px; height: 14px; border-radius: 2px;"></div>
+              <div class="skeleton" style="width: 6px; height: 14px; border-radius: 2px;"></div>
+              <div class="skeleton" style="width: 6px; height: 14px; border-radius: 2px;"></div>
+            </div>
+          </div>
+
+          <h3 class="indicators-title">Key indicators</h3>
+          <div class="indicators">
+            <div class="indicator skel">
+              <div class="skeleton" style="width: 72%; height: 13px;"></div>
+            </div>
+            <div class="indicator skel">
+              <div class="skeleton" style="width: 58%; height: 13px;"></div>
+            </div>
+            <div class="indicator skel">
+              <div class="skeleton" style="width: 84%; height: 13px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reasoning">
+        <p class="r-eyebrow">REASONING</p>
+        <div class="skeleton" style="width: 100%; height: 11px; margin-bottom: 7px;"></div>
+        <div class="skeleton" style="width: 92%; height: 11px; margin-bottom: 7px;"></div>
+        <div class="skeleton" style="width: 64%; height: 11px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISAGREEMENT STATE -->
+  <div>
+    <p class="section-label">DISAGREEMENT — DETECTORS DID NOT AGREE</p>
+    <div class="panel" style="max-width: 520px;">
+      <div class="disagreement-banner">
+        <svg width="15" height="15" viewBox="0 0 14 14"><path d="M7 1l6 11H1z" stroke="#7A5418" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M7 5.5v3M7 10v0.5" stroke="#7A5418" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div>
+          <p class="head">Our detectors disagreed on this image</p>
+          <p class="body">Treat this verdict with extra caution. Individual detector signals below tell the full story.</p>
+        </div>
+      </div>
+
+      <div class="verdict uncertain">
+        <div class="v-eyebrow">
+          <span class="v-dot uncertain"></span>
+          <p>不确定 · UNSURE</p>
+        </div>
+        <h2 class="v-headline">Can't verify</h2>
+        <p class="v-sub">Detectors returned conflicting signals.</p>
+        <div class="conf-row">
+          <p class="conf-label">AI likelihood</p>
+          <p class="conf-value">48.3%</p>
+        </div>
+        <div class="conf-bar uncertain">
+          <div class="conf-fill uncertain" style="width: 48%;"></div>
+        </div>
+      </div>
+
+      <div class="agreement-row warn">
+        <div class="agreement-meta warn">
+          <p>DETECTOR AGREEMENT</p>
+          <p>Disagreement</p>
+        </div>
+        <div class="agreement-bars">
+          <span class="bar active-warn"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+      </div>
+
+      <h3 class="indicators-title">Conflicting signals</h3>
+      <div class="indicators">
+        <div class="indicator ai">
+          <div class="indicator-head ai">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#6B8C4F" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p>Suggests AI</p>
+          </div>
+          <p class="indicator-body">Smooth texture in skin regions</p>
+        </div>
+        <div class="indicator human-suggest">
+          <div class="indicator-head human">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3 3l4 4M7 3l-4 4" stroke="#B85446" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <p>Suggests real</p>
+          </div>
+          <p class="indicator-body">EXIF metadata intact, camera model detected</p>
+        </div>
+        <div class="indicator human-suggest">
+          <div class="indicator-head human">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3 3l4 4M7 3l-4 4" stroke="#B85446" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <p>Suggests real</p>
+          </div>
+          <p class="indicator-body">Natural grain consistent with camera sensor</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

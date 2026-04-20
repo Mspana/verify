@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verify — Scanning state</title>
+<style>
+  :root {
+    --paper: #FBFAF7;
+    --paper-alt: #F3F1EB;
+    --border: #D9D5C9;
+    --ink: #141414;
+    --cobalt: #1652F0;
+    --ai-accent: #6B8C4F;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #E8E4D6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+  }
+  .page-wrap {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-size: 13px; color: #555;
+    letter-spacing: 0.3px;
+    margin: 0 0 12px;
+    font-weight: 500;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @keyframes sweep {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes dot-fade {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+  @keyframes rot {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .scan-sweep { animation: sweep 2s linear infinite; }
+  .dot-1 { animation: dot-fade 1.4s ease-in-out infinite; }
+  .dot-2 { animation: dot-fade 1.4s ease-in-out 0.2s infinite; }
+  .dot-3 { animation: dot-fade 1.4s ease-in-out 0.4s infinite; }
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--cobalt);
+    border-top-color: transparent;
+    animation: rot 1s linear infinite;
+  }
+
+  /* Mobile */
+  .mobile-frame {
+    width: 360px;
+    background: var(--paper);
+    border-radius: 28px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+    margin: 0 auto;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .mobile-statusbar {
+    display: flex; justify-content: space-between;
+    padding: 12px 20px 6px;
+    font-size: 12px; font-weight: 500;
+  }
+  .back-row {
+    padding: 14px 20px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .back-btn {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: var(--paper-alt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .screen-title {
+    font-size: 15px; font-weight: 500; margin: 0;
+  }
+
+  .scan-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #E8DFD0 0%, #D9C8A8 100%);
+    overflow: hidden;
+  }
+  .scan-image-d {
+    aspect-ratio: 4/3;
+  }
+  .scan-image svg.placeholder {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .scan-sweep-el {
+    position: absolute;
+    left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(180deg, transparent 0%, rgba(22, 82, 240, 0.25) 50%, transparent 100%);
+    border-bottom: 1.5px solid var(--cobalt);
+  }
+  .corner {
+    position: absolute; width: 22px; height: 22px;
+  }
+  .c-tl { top: 12px; left: 12px; }
+  .c-tr { top: 12px; right: 12px; }
+  .c-bl { bottom: 12px; left: 12px; }
+  .c-br { bottom: 12px; right: 12px; }
+
+  .analyzing-text {
+    text-align: center; margin-top: 22px;
+  }
+  .analyzing-text h2 {
+    font-size: 17px; font-weight: 500; margin: 0 0 5px;
+  }
+  .analyzing-text .zh {
+    font-size: 13px; opacity: 0.55; margin: 0;
+  }
+
+  .steps {
+    display: flex; flex-direction: column;
+    gap: 11px;
+    background: #FFFFFF;
+    border: 0.5px solid var(--border);
+    border-radius: 11px;
+    padding: 14px 16px;
+    margin-top: 20px;
+  }
+  .step {
+    display: flex; align-items: center;
+    gap: 11px;
+    font-size: 13px;
+  }
+  .step.done .marker { color: var(--ai-accent); }
+  .step.pending { opacity: 0.42; }
+  .step.pending .marker {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+  }
+  .step.active .label { font-weight: 500; color: var(--ink); }
+  .step.done .label { color: var(--ink); opacity: 0.75; }
+  .step.done, .step.active { color: var(--ink); }
+  .marker { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* Desktop */
+  .desktop-frame {
+    background: var(--paper);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 720px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .sidebar {
+    background: var(--paper-alt);
+    padding: 20px 14px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 10px 22px;
+  }
+  .brand-icon {
+    width: 24px; height: 24px;
+    border-radius: 7px;
+    background: var(--cobalt);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--paper);
+    font-size: 12px; font-weight: 500;
+  }
+  .brand-text { font-size: 15px; font-weight: 500; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .nav-item.active {
+    background: var(--paper);
+    color: var(--cobalt);
+    font-weight: 500;
+  }
+  .nav-item:not(.active) { opacity: 0.75; }
+  .desktop-main {
+    padding: 40px 48px;
+  }
+  .d-inner {
+    max-width: 640px; margin: 0 auto;
+  }
+  .eyebrow {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.3px; margin: 0 0 5px;
+  }
+  .d-title {
+    font-size: 26px; font-weight: 500; margin: 0 0 24px;
+    line-height: 1.2;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div>
+    <p class="section-label">SCANNING — MOBILE (390px) & DESKTOP (1280px)</p>
+    <div class="row">
+
+      <!-- MOBILE -->
+      <div class="mobile-frame">
+        <div class="mobile-statusbar">
+          <span>9:41</span>
+          <span>●●●  ●●</span>
+        </div>
+        <div class="back-row">
+          <div class="back-btn">‹</div>
+          <h2 class="screen-title">Scanning</h2>
+        </div>
+
+        <div style="padding: 12px 20px 24px;">
+          <div class="scan-image">
+            <svg class="placeholder" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <circle cx="70" cy="35" r="10" fill="#F4D78A" opacity="0.85"/>
+              <path d="M0 70 L25 55 L45 65 L70 45 L100 60 L100 100 L0 100 Z" fill="#8B7050" opacity="0.6"/>
+              <path d="M0 85 L30 75 L55 82 L80 72 L100 80 L100 100 L0 100 Z" fill="#5A4A35" opacity="0.5"/>
+            </svg>
+            <div style="position: absolute; inset: 0; overflow: hidden;">
+              <div class="scan-sweep scan-sweep-el"></div>
+            </div>
+            <svg class="corner c-tl" viewBox="0 0 20 20"><path d="M2 8V2h6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+            <svg class="corner c-tr" viewBox="0 0 20 20"><path d="M18 8V2h-6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+            <svg class="corner c-bl" viewBox="0 0 20 20"><path d="M2 12v6h6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+            <svg class="corner c-br" viewBox="0 0 20 20"><path d="M18 12v6h-6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </div>
+
+          <div class="analyzing-text">
+            <h2>Analyzing image<span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></h2>
+            <p class="zh">正在分析图片</p>
+          </div>
+
+          <div class="steps">
+            <div class="step done">
+              <svg class="marker" viewBox="0 0 14 14"><path d="M3 7l3 3 5-6" stroke="#6B8C4F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="label">Uploaded</span>
+            </div>
+            <div class="step done">
+              <svg class="marker" viewBox="0 0 14 14"><path d="M3 7l3 3 5-6" stroke="#6B8C4F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="label">Preprocessing</span>
+            </div>
+            <div class="step active">
+              <span class="marker"><span class="spinner"></span></span>
+              <span class="label">Detecting AI patterns</span>
+            </div>
+            <div class="step pending">
+              <span class="marker"></span>
+              <span class="label">Generating heatmap</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP -->
+      <div class="desktop-frame">
+        <div class="sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-icon">眼</div>
+            <div class="brand-text">真伪 · Verify</div>
+          </div>
+          <div class="nav-item active">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 7l6-5 6 5v7H2z" stroke="#1652F0" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span>Scan</span>
+          </div>
+          <div class="nav-item">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#141414" stroke-width="1.5" opacity="0.55"/><path d="M8 5v3l2 1" stroke="#141414" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/></svg>
+            <span>History</span>
+          </div>
+          <div class="nav-item">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2.5" stroke="#141414" stroke-width="1.5" opacity="0.55"/><path d="M3 14c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" stroke="#141414" stroke-width="1.5" opacity="0.55"/></svg>
+            <span>Account</span>
+          </div>
+        </div>
+
+        <div class="desktop-main">
+          <div class="d-inner">
+            <p class="eyebrow">SCANNING</p>
+            <h1 class="d-title">Analyzing image<span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></h1>
+
+            <div class="scan-image scan-image-d" style="max-width: 520px; margin: 0 auto 28px;">
+              <svg class="placeholder" viewBox="0 0 100 75" preserveAspectRatio="none">
+                <circle cx="75" cy="22" r="8" fill="#F4D78A" opacity="0.85"/>
+                <path d="M0 55 L25 42 L45 50 L70 34 L100 45 L100 75 L0 75 Z" fill="#8B7050" opacity="0.6"/>
+                <path d="M0 65 L30 57 L55 62 L80 54 L100 60 L100 75 L0 75 Z" fill="#5A4A35" opacity="0.5"/>
+              </svg>
+              <div style="position: absolute; inset: 0; overflow: hidden;">
+                <div class="scan-sweep scan-sweep-el"></div>
+              </div>
+              <svg class="corner c-tl" viewBox="0 0 20 20"><path d="M2 8V2h6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              <svg class="corner c-tr" viewBox="0 0 20 20"><path d="M18 8V2h-6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              <svg class="corner c-bl" viewBox="0 0 20 20"><path d="M2 12v6h6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              <svg class="corner c-br" viewBox="0 0 20 20"><path d="M18 12v6h-6" stroke="#1652F0" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+            </div>
+
+            <div class="steps" style="max-width: 520px; margin: 0 auto;">
+              <div class="step done">
+                <svg class="marker" viewBox="0 0 14 14"><path d="M3 7l3 3 5-6" stroke="#6B8C4F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="label">Uploaded</span>
+              </div>
+              <div class="step done">
+                <svg class="marker" viewBox="0 0 14 14"><path d="M3 7l3 3 5-6" stroke="#6B8C4F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="label">Preprocessing</span>
+              </div>
+              <div class="step active">
+                <span class="marker"><span class="spinner"></span></span>
+                <span class="label">Detecting AI patterns</span>
+              </div>
+              <div class="step pending">
+                <span class="marker"></span>
+                <span class="label">Generating heatmap</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

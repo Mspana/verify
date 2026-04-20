@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verify — Empty & error states</title>
+<style>
+  :root {
+    --paper: #FBFAF7;
+    --paper-alt: #F3F1EB;
+    --border: #D9D5C9;
+    --ink: #141414;
+    --cobalt: #1652F0;
+    --human-fill: #F7E8E3;
+    --human-accent: #B85446;
+    --human-ink: #7A2E23;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: #E8E4D6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+  }
+  .page-wrap {
+    padding: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-size: 13px; color: #555;
+    letter-spacing: 0.3px;
+    margin: 0 0 12px;
+    font-weight: 500;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  @keyframes rot {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(20,20,20,0.25);
+    border-top-color: var(--cobalt);
+    animation: rot 1.2s linear infinite;
+  }
+
+  .variant-label {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.3px;
+    margin: 0 0 9px;
+  }
+  .panel {
+    background: var(--paper);
+    border-radius: 13px;
+    border: 0.5px solid var(--border);
+    padding: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+
+  .eyebrow {
+    font-size: 11px; opacity: 0.55;
+    letter-spacing: 0.3px;
+    margin: 0 0 5px;
+  }
+  .page-title {
+    font-size: 19px;
+    font-weight: 500;
+    margin: 0 0 16px;
+    line-height: 1.2;
+  }
+  .upload-area {
+    background: #FFFFFF;
+    border: 1px dashed var(--border);
+    border-radius: 11px;
+    padding: 28px 16px;
+    text-align: center;
+    margin-bottom: 11px;
+  }
+  .upload-icon {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: var(--paper-alt);
+    margin: 0 auto 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .upload-primary {
+    font-size: 13px; font-weight: 500;
+    margin: 0 0 3px;
+  }
+  .upload-sub {
+    font-size: 11px; opacity: 0.55;
+    margin: 0;
+  }
+  .cta {
+    width: 100%;
+    background: var(--cobalt);
+    color: var(--paper);
+    border: none;
+    border-radius: 11px;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 22px;
+    cursor: pointer;
+  }
+  .empty-block {
+    text-align: center;
+    padding: 22px 12px;
+    background: var(--paper-alt);
+    border-radius: 11px;
+  }
+  .empty-block svg { margin-bottom: 10px; }
+  .empty-block .e-title {
+    font-size: 13px; font-weight: 500;
+    margin: 0 0 4px;
+  }
+  .empty-block .e-sub {
+    font-size: 11px;
+    opacity: 0.55;
+    margin: 0;
+  }
+
+  .heatmap-pending {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 11px;
+    background: var(--paper-alt);
+    overflow: hidden;
+    margin-bottom: 11px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .heatmap-pending p.hp-title {
+    font-size: 13px; font-weight: 500;
+    margin: 0;
+  }
+  .heatmap-pending p.hp-sub {
+    font-size: 11px;
+    opacity: 0.55;
+    margin: 0;
+  }
+  .tab-switcher {
+    display: flex;
+    background: var(--paper-alt);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 13px;
+  }
+  .tab {
+    flex: 1; text-align: center;
+    padding: 7px;
+    font-size: 12px;
+    opacity: 0.55;
+  }
+  .tab.active {
+    background: var(--paper);
+    border-radius: 6px;
+    font-weight: 500;
+    opacity: 1;
+  }
+  .hp-caption {
+    font-size: 11px; opacity: 0.55;
+    margin: 0;
+  }
+
+  .error-banner {
+    background: var(--human-fill);
+    border: 0.5px solid var(--human-accent);
+    border-radius: 11px;
+    padding: 13px 15px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+  .error-banner .eb-title {
+    font-size: 13px; font-weight: 500;
+    color: var(--human-ink);
+    margin: 0 0 3px;
+  }
+  .error-banner .eb-body {
+    font-size: 12px;
+    color: var(--human-ink);
+    opacity: 0.85;
+    margin: 0;
+  }
+  .btn-row {
+    display: flex; gap: 10px;
+  }
+  .btn-primary-s {
+    flex: 1;
+    background: var(--cobalt);
+    color: var(--paper);
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-ghost-s {
+    flex: 1;
+    background: transparent;
+    color: var(--ink);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .error-full {
+    text-align: center;
+    padding: 12px 4px 16px;
+  }
+  .error-icon-circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--human-fill);
+    margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .error-full .ef-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 5px;
+  }
+  .error-full .ef-body {
+    font-size: 12px;
+    opacity: 0.65;
+    margin: 0 0 16px;
+  }
+  .error-row {
+    display: flex; gap: 10px; justify-content: center;
+  }
+  .err-code-row {
+    padding-top: 13px;
+    border-top: 0.5px solid var(--border);
+  }
+  .err-code-row p {
+    font-size: 11px;
+    opacity: 0.55;
+    margin: 0;
+    text-align: center;
+  }
+  .err-code-row code {
+    font-family: ui-monospace, "SF Mono", monospace;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <p class="section-label">EMPTY & ERROR STATES</p>
+  <div class="grid">
+
+    <!-- EMPTY STATE -->
+    <div>
+      <p class="variant-label">EMPTY · FIRST-TIME HOME</p>
+      <div class="panel">
+        <p class="eyebrow">AI DETECTION</p>
+        <h2 class="page-title">Check for AI</h2>
+        <div class="upload-area">
+          <div class="upload-icon">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="#141414" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <p class="upload-primary">Tap to upload</p>
+          <p class="upload-sub">JPG, PNG, HEIC</p>
+        </div>
+        <button class="cta">扫描 · Scan</button>
+
+        <div class="empty-block">
+          <svg width="42" height="42" viewBox="0 0 40 40">
+            <rect x="6" y="10" width="28" height="22" rx="3" stroke="#141414" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
+            <circle cx="14" cy="18" r="2" fill="#141414" fill-opacity="0.35"/>
+            <path d="M6 28l8-8 8 6 4-4 8 6" stroke="#141414" stroke-opacity="0.35" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="e-title">No scans yet</p>
+          <p class="e-sub">Your previous scans will appear here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEATMAP PENDING -->
+    <div>
+      <p class="variant-label">HEATMAP PENDING</p>
+      <div class="panel">
+        <div class="heatmap-pending">
+          <div class="spinner"></div>
+          <p class="hp-title">Generating heatmap</p>
+          <p class="hp-sub">Usually 10–20 seconds</p>
+        </div>
+        <div class="tab-switcher">
+          <div class="tab">Original</div>
+          <div class="tab active">Heatmap</div>
+        </div>
+        <p class="hp-caption">The verdict and signals are ready. The heatmap will load here when it's done.</p>
+      </div>
+    </div>
+
+    <!-- UPLOAD REJECTED (inline banner) -->
+    <div>
+      <p class="variant-label">ERROR · UPLOAD REJECTED (INLINE BANNER)</p>
+      <div class="panel">
+        <div class="error-banner">
+          <svg width="15" height="15" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" stroke="#B85446" stroke-width="1.5" fill="none"/><path d="M7 4v4M7 9.5v0.5" stroke="#B85446" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div>
+            <p class="eb-title">File too large</p>
+            <p class="eb-body">This image is 28 MB. Maximum size is 10 MB. Try a smaller file or a different format.</p>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary-s">Try again</button>
+          <button class="btn-ghost-s">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCAN FAILED (full page) -->
+    <div>
+      <p class="variant-label">ERROR · SCAN FAILED (FULL PAGE)</p>
+      <div class="panel">
+        <div class="error-full">
+          <div class="error-icon-circle">
+            <svg width="17" height="17" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="#B85446" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <p class="ef-title">Scan couldn't finish</p>
+          <p class="ef-body">The detection service didn't respond. Your image wasn't saved.</p>
+          <div class="error-row">
+            <button class="btn-primary-s" style="flex: 0 0 auto; padding: 9px 18px;">Retry</button>
+            <button class="btn-ghost-s" style="flex: 0 0 auto; padding: 9px 18px;">Go back</button>
+          </div>
+        </div>
+        <div class="err-code-row">
+          <p>Error code: <code>TS_TIMEOUT_504</code></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
