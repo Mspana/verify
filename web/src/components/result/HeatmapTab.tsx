@@ -1,5 +1,5 @@
 import { ImageOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { Heatmap, Preview } from "@verify/shared";
 
 import { Skeleton } from "../ui/Skeleton";
@@ -7,22 +7,30 @@ import { Tabs } from "../ui/Tab";
 
 // Image + heatmap control.
 //
-//   [ Original ][ Heatmap ]    ← segmented tab-switcher
-//   Overlay  ——●——  65%         ← only when heatmap.status === "ready"
-//                                 + mode === "transparent". Hidden for
-//                                 pending/skipped/failed — no overlay
-//                                 means no opacity to control.
-//   small caption text          ← describes what the overlay shows
+//   [ Original ][ Heatmap ]    ← segmented tab-switcher (ARIA tablist)
+//   ┌─────────────────────┐
+//   │       image         │   ← tabpanel: one DOM element; content
+//   └─────────────────────┘     swaps between Original preview and
+//   Red areas show …             Heatmap composite / placeholder.
+//                                Caption only appears on the Heatmap
+//                                tab — it explains what the colors
+//                                mean and is meaningless on Original.
 //
 // Heatmap tab states:
-//   ready + transparent → composite preview + heatmap with slider
-//   ready + overlayed   → heatmap alone, no slider
+//   ready + transparent → composite preview + heatmap at 75% opacity
+//                         (fixed; no slider — the value wasn't earning
+//                         its vertical real estate)
+//   ready + overlayed   → heatmap alone (future flag path)
 //   pending             → skeleton (wait for polling to resolve)
-//   skipped / failed    → preview image rendered with a grayscale
-//                         filter + a paper/90 pill overlay explaining
-//                         that no heatmap was produced. We keep the
-//                         user's image visible so the tab isn't a
-//                         dead-end beige square.
+//   skipped / failed    → preview rendered grayscale with a paper/90
+//                         pill on top
+//
+// Keyboard:
+//   - Arrow / Home / End traverse tabs (W3C pattern, handled by Tabs).
+//   - 'H' toggles Original ↔ Heatmap globally while this component is
+//     mounted. Undocumented power-user shortcut; no UI hint. Guarded
+//     against firing inside form inputs and against modifier-key
+//     combos so browser shortcuts and text typing still work.
 
 type TabId = "original" | "heatmap";
 
@@ -32,65 +40,83 @@ type Props = {
   heatmap: Heatmap;
 };
 
-const DEFAULT_OPACITY = 0.65;
+/** Fixed heatmap overlay opacity — replaces the user-controlled slider. */
+const HEATMAP_OPACITY = 0.75;
 
 export function HeatmapTab({ preview, heatmap }: Props) {
   const [active, setActive] = useState<TabId>("original");
-  const [opacity, setOpacity] = useState<number>(DEFAULT_OPACITY);
 
-  const showSlider =
-    active === "heatmap" &&
-    heatmap.status === "ready" &&
-    heatmap.mode === "transparent";
+  // Stable ids for ARIA wiring. One panelId shared by both tabs (the
+  // panel swaps contents rather than toggling visibility), per W3C:
+  // aria-labelledby on the panel points to the currently-active tab.
+  const idPrefix = useId();
+  const panelId = `${idPrefix}panel`;
+  const originalTabId = `${idPrefix}tab-original`;
+  const heatmapTabId = `${idPrefix}tab-heatmap`;
+  const activeTabId = active === "original" ? originalTabId : heatmapTabId;
+
+  // 'H' shortcut: scoped by this effect's lifetime. When HeatmapTab
+  // unmounts (user navigates away from a result), the listener goes
+  // with it — no global leak.
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Don't eat the keystroke while the user is typing.
+      const target = e.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      if (e.key.toLowerCase() !== "h") return;
+      setActive((prev) => (prev === "original" ? "heatmap" : "original"));
+    };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+  }, []);
 
   return (
     <div className="flex flex-col gap-[14px]">
-      <ImageFrame
-        preview={preview}
-        heatmap={heatmap}
-        showHeatmap={active === "heatmap"}
-        opacity={opacity}
-      />
+      <div
+        role="tabpanel"
+        id={panelId}
+        aria-labelledby={activeTabId}
+        tabIndex={0}
+        className="focus:outline-none"
+      >
+        <ImageFrame
+          preview={preview}
+          heatmap={heatmap}
+          showHeatmap={active === "heatmap"}
+        />
+        {active === "heatmap" && (
+          <p className="mt-2 text-[10px] text-ink/55">
+            Red areas show where the detector found AI patterns.
+          </p>
+        )}
+      </div>
 
       <div className="rounded-[11px] border border-border bg-white px-[14px] py-[13px]">
         <Tabs
           tabs={[
-            { id: "original", label: "Original" },
-            { id: "heatmap", label: "Heatmap" },
+            {
+              id: "original",
+              label: "Original",
+              tabId: originalTabId,
+              panelId,
+            },
+            {
+              id: "heatmap",
+              label: "Heatmap",
+              tabId: heatmapTabId,
+              panelId,
+            },
           ] as const}
           active={active}
           onChange={(id: TabId) => setActive(id)}
           ariaLabel="Image view"
         />
-        {showSlider && (
-          <div className="mt-[13px]">
-            <div className="flex items-center gap-[11px]">
-              <label
-                htmlFor="heatmap-opacity"
-                className="min-w-[56px] text-[11px] text-ink/55"
-              >
-                Overlay
-              </label>
-              <input
-                id="heatmap-opacity"
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={Math.round(opacity * 100)}
-                onChange={(e) => setOpacity(Number(e.target.value) / 100)}
-                aria-label="Heatmap opacity"
-                className="flex-1 accent-cobalt"
-              />
-              <span className="min-w-[30px] text-right text-[11px] text-ink/75 tabular-nums">
-                {Math.round(opacity * 100)}%
-              </span>
-            </div>
-            <p className="mt-[9px] text-[10px] text-ink/55">
-              Red areas show where the detector found AI patterns.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -100,17 +126,13 @@ function ImageFrame({
   preview,
   heatmap,
   showHeatmap,
-  opacity,
 }: {
   preview: Preview;
   heatmap: Heatmap;
   showHeatmap: boolean;
-  opacity: number;
 }) {
   if (showHeatmap) {
-    return (
-      <HeatmapView preview={preview} heatmap={heatmap} opacity={opacity} />
-    );
+    return <HeatmapView preview={preview} heatmap={heatmap} />;
   }
   return <PreviewImage preview={preview} />;
 }
@@ -139,11 +161,9 @@ function PreviewImage({ preview }: { preview: Preview }) {
 function HeatmapView({
   preview,
   heatmap,
-  opacity,
 }: {
   preview: Preview;
   heatmap: Heatmap;
-  opacity: number;
 }) {
   if (heatmap.status === "pending") {
     return <Skeleton className="aspect-[4/3] w-full rounded-card" />;
@@ -190,7 +210,7 @@ function HeatmapView({
       <img
         src={heatmap.url}
         alt="Heatmap overlay"
-        style={{ opacity }}
+        style={{ opacity: HEATMAP_OPACITY }}
         className="pointer-events-none absolute inset-0 h-full w-full rounded-card"
       />
     </div>

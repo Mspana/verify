@@ -180,7 +180,6 @@
     background: var(--paper-alt);
     border-radius: 8px;
     padding: 3px;
-    margin-bottom: 13px;
   }
   .tab {
     flex: 1; text-align: center;
@@ -196,44 +195,10 @@
     font-weight: 500;
     opacity: 1;
   }
-
-  .slider-row {
-    display: flex; align-items: center; gap: 11px;
-  }
-  .slider-row label {
-    font-size: 11px; opacity: 0.55;
-    min-width: 56px;
-  }
-  .slider-track {
-    flex: 1; height: 4px;
-    background: var(--border);
-    border-radius: 3px;
-    position: relative;
-  }
-  .slider-fill {
-    height: 100%; width: 65%;
-    background: var(--cobalt);
-    border-radius: 3px;
-  }
-  .slider-thumb {
-    position: absolute;
-    left: 65%; top: 50%;
-    transform: translate(-50%, -50%);
-    width: 16px; height: 16px;
-    background: var(--cobalt);
-    border: 2px solid var(--paper);
-    border-radius: 50%;
-  }
-  .slider-value {
-    font-size: 11px;
-    opacity: 0.75;
-    min-width: 30px;
-    text-align: right;
-  }
-  .slider-caption {
+  .heatmap-caption {
     font-size: 10px;
     opacity: 0.55;
-    margin: 9px 0 0;
+    margin: 8px 0 0;
   }
 
   .tags-eyebrow {
@@ -467,20 +432,13 @@
             </div>
           </div>
 
+          <p class="heatmap-caption">Red areas show where the detector found AI patterns.</p>
+
           <div class="heatmap-control">
             <div class="tab-switcher">
               <div class="tab">Original</div>
               <div class="tab active">Heatmap</div>
             </div>
-            <div class="slider-row">
-              <label>Overlay</label>
-              <div class="slider-track">
-                <div class="slider-fill"></div>
-                <div class="slider-thumb"></div>
-              </div>
-              <span class="slider-value">65%</span>
-            </div>
-            <p class="slider-caption">Red areas show where the detector found AI patterns.</p>
           </div>
 
           <div>
