@@ -8,6 +8,7 @@ import type { Logger } from "./lib/logger.ts";
 
 export type Env = {
   VERIFY_KV: KVNamespace;
+  ASSETS: Fetcher;
   TRUTHSCAN_API_KEY: string;
   COOKIE_SIGNING_KEY: string;
   /**

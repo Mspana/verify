@@ -112,13 +112,14 @@ app.route("/api", assetRoutes);
 app.route("/api", historyRoutes);
 app.route("/api", metaRoutes);
 
-// Unknown /api/* → 404 with our standard error shape. The static SPA handles
-// non-/api paths via the Pages binding, not this Worker.
+// Unknown /api/* → 404 with our standard error shape. Non-/api paths fall
+// through to the Static Assets binding, which serves web/dist (SPA fallback
+// returns index.html for unknown routes so React Router handles them).
 app.notFound((c) => {
   if (new URL(c.req.url).pathname.startsWith("/api/")) {
     return c.json(err("SCAN_NOT_FOUND", "Not found.", false), 404);
   }
-  return c.text("Not found", 404);
+  return c.env.ASSETS.fetch(c.req.raw);
 });
 
 app.onError((caught, c) => {

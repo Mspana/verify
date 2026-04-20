@@ -8,6 +8,13 @@ compatibility_flags = ["nodejs_compat"]
 #   COOKIE_SIGNING_KEY  — 32+ byte random string for HMAC (per-env; rotating invalidates sessions)
 # Local development reads them from .dev.vars (gitignored).
 
+# Static frontend served from the same Worker as the API. Temporary
+# consolidation — see docs/ARCHITECTURE.md "Deployment architecture — current."
+[assets]
+directory = "../web/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
 [[kv_namespaces]]
 binding = "VERIFY_KV"
 id = "ec8e2822db754dce993b45ce8309937c"
