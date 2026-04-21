@@ -122,6 +122,15 @@
     "watermarkLabel": "{{label}} watermark",
     "watermarkDetail": "{{value}} confidence"
   },
+  "export": {
+    "label": "Export",
+    "menuLabel": "Export options",
+    "pdf": "Save as PDF",
+    "png": "Save as PNG",
+    "exporting": "Exporting…",
+    "availableWhenComplete": "Available when the scan completes",
+    "failed": "Export failed. Please try again."
+  },
   "history": {
     "eyebrow": "Library",
     "title": "History",

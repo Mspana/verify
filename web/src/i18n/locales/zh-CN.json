@@ -122,6 +122,15 @@
     "watermarkLabel": "{{label}} 水印",
     "watermarkDetail": "可信度 {{value}}"
   },
+  "export": {
+    "label": "导出",
+    "menuLabel": "导出选项",
+    "pdf": "保存为 PDF",
+    "png": "保存为 PNG",
+    "exporting": "正在导出…",
+    "availableWhenComplete": "扫描完成后可用",
+    "failed": "导出失败，请重试。"
+  },
   "history": {
     "eyebrow": "库",
     "title": "历史",

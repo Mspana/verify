@@ -67,11 +67,21 @@ assetRoutes.get("/scan/:id/preview", async (c) => {
   });
 
   // Edge cache for 1 hour — preview bytes don't change.
+  //
+  // Access-Control-Allow-Origin: * is intentional. These bytes are
+  // already gated by session auth (the 401 above), so open CORS on the
+  // response doesn't widen who can read them — a cross-origin page
+  // without the session cookie still gets 401, not the image. The open
+  // grant unblocks client-side canvas rendering (html2canvas export)
+  // which sets crossOrigin="anonymous" on <img> tags and refuses to
+  // paint images without an ACAO header. No credentials flag — we
+  // don't need cookies on this response for export.
   return new Response(result.body, {
     status: 200,
     headers: {
       "content-type": result.contentType ?? "image/jpeg",
       "cache-control": "public, max-age=3600, immutable",
+      "access-control-allow-origin": "*",
     },
   });
 });
@@ -147,11 +157,13 @@ assetRoutes.get("/scan/:id/heatmap", async (c) => {
     durationMs: Date.now() - started,
   });
 
+  // See the ACAO note on the preview handler above — same rationale.
   return new Response(result.body, {
     status: 200,
     headers: {
       "content-type": result.contentType ?? "image/png",
       "cache-control": "public, max-age=3600, immutable",
+      "access-control-allow-origin": "*",
     },
   });
 });

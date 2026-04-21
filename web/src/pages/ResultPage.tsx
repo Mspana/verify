@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { Scan, VerdictLabel } from "@verify/shared";
 
@@ -6,6 +7,7 @@ import { formatRelative } from "../lib/format";
 import { AgreementRow } from "../components/verdict/AgreementRow";
 import { KeyIndicators } from "../components/verdict/KeyIndicators";
 import { VerdictBanner } from "../components/verdict/VerdictBanner";
+import { ExportButton } from "../components/result/ExportButton";
 import { HeatmapTab } from "../components/result/HeatmapTab";
 import { ImageTags } from "../components/result/ImageTags";
 import { SignalsRow } from "../components/result/SignalsRow";
@@ -22,6 +24,7 @@ type Props = {
 
 export function ResultPage({ scan }: Props) {
   const { t } = useTranslation();
+  const exportRef = useRef<HTMLDivElement>(null);
   const showDisagreement =
     scan.analysis.status === "ready" &&
     scan.analysis.agreement === "disagreement";
@@ -29,18 +32,33 @@ export function ResultPage({ scan }: Props) {
   const verdictLabel: VerdictLabel | null =
     scan.verdict.status === "ready" ? scan.verdict.label : null;
 
+  const exportDisabled = scan.state !== "complete";
+
   return (
-    <div className="mx-auto max-w-[1000px] px-5 pt-3 pb-6 md:px-10 md:pt-6 md:pb-10">
-      <header className="mb-4">
-        <p className="text-[11px] uppercase tracking-[0.3px] text-ink/55">
-          {t("result.eyebrow")}
-        </p>
-        <h1 className="mt-1 text-[20px] font-medium leading-[1.2] md:text-[22px]">
-          {scan.filename}
-        </h1>
-        <p className="mt-0.5 text-[11px] text-ink/55">
-          {t("result.scanned", { time: formatRelative(scan.createdAt) })}
-        </p>
+    <div
+      ref={exportRef}
+      className="mx-auto max-w-[1000px] px-5 pt-3 pb-6 md:px-10 md:pt-6 md:pb-10"
+    >
+      <header className="mb-4 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.3px] text-ink/55">
+            {t("result.eyebrow")}
+          </p>
+          <h1 className="mt-1 text-[20px] font-medium leading-[1.2] md:text-[22px]">
+            {scan.filename}
+          </h1>
+          <p className="mt-0.5 text-[11px] text-ink/55">
+            {t("result.scanned", { time: formatRelative(scan.createdAt) })}
+          </p>
+        </div>
+        <div data-export-ignore="true" className="flex-shrink-0">
+          <ExportButton
+            scanId={scan.id}
+            targetRef={exportRef}
+            disabled={exportDisabled}
+            disabledHint={t("export.availableWhenComplete")}
+          />
+        </div>
       </header>
 
       {showDisagreement && <DisagreementBanner />}
